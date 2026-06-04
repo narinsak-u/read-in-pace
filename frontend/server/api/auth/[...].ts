@@ -11,6 +11,11 @@ export default defineEventHandler(async (event) => {
     headers['cookie'] = cookie;
   }
 
+  const origin = getHeader(event, 'origin');
+  if (origin) {
+    headers['origin'] = origin;
+  }
+
   const response = await fetch(`${backendUrl}${path}`, {
     method: event.method,
     headers,
