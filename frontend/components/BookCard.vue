@@ -2,6 +2,7 @@
 import { Pencil, Trash2, RotateCcw, BookOpen } from "lucide-vue-next";
 import type { Book } from "~/data/books";
 import { useDashboardStore } from "~/stores/dashboard";
+import { useBooksStore } from "~/stores/books";
 import { useAuthStore } from "~/stores/auth";
 
 const props = withDefaults(
@@ -12,8 +13,19 @@ const props = withDefaults(
   { variant: "default" },
 );
 
+const emit = defineEmits<{
+  edit: [book: Book];
+}>();
+
 const dashboard = useDashboardStore();
+const booksStore = useBooksStore();
 const auth = useAuthStore();
+
+async function handleDelete() {
+  if (confirm("Delete this book?")) {
+    await booksStore.deleteBook(props.book.id);
+  }
+}
 </script>
 
 <template>
@@ -25,11 +37,13 @@ const auth = useAuthStore();
       class="absolute right-3 top-3 z-10 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100"
     >
       <button
+        @click="emit('edit', book)"
         class="flex h-8 w-8 items-center justify-center rounded-lg bg-background/90 backdrop-blur ring-1 ring-border hover:bg-background"
       >
         <Pencil class="h-3.5 w-3.5" />
       </button>
       <button
+        @click="handleDelete"
         class="flex h-8 w-8 items-center justify-center rounded-lg bg-background/90 text-destructive backdrop-blur ring-1 ring-border hover:bg-background"
       >
         <Trash2 class="h-3.5 w-3.5" />
@@ -74,13 +88,13 @@ const auth = useAuthStore();
         </template>
         <template v-else>
           <button
-            @click="dashboard.buy(book.id)"
+            @click="dashboard.buyBook(book.id)"
             class="flex-1 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
-            Buy ${{ book.price.toFixed(2) }}
+            Buy ${{ Number(book.price).toFixed(2) }}
           </button>
           <button
-            @click="dashboard.borrow(book.id)"
+            @click="dashboard.borrowBook(book.id)"
             class="flex-1 rounded-lg border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
           >
             Borrow

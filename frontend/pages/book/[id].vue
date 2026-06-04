@@ -2,33 +2,53 @@
 import { ArrowLeft, Star, Heart, MessageSquare, Share2 } from "lucide-vue-next";
 import { useBooksStore } from "~/stores/books";
 import { useDashboardStore } from "~/stores/dashboard";
+import { useAuthStore } from "~/stores/auth";
 
 const route = useRoute();
 const id = route.params.id as string;
 
 const booksStore = useBooksStore();
 const dashboard = useDashboardStore();
+const auth = useAuthStore();
 
-const book = computed(() => booksStore.getBook(id));
-const reviews = ref(booksStore.getReviews(id));
+const book = ref<any>(null);
+const comments = ref<any[]>([]);
 const draft = ref("");
+
+onMounted(async () => {
+  book.value = await booksStore.fetchBook(id);
+  comments.value = await booksStore.fetchComments(id);
+});
+
+async function submitReview() {
+  if (!draft.value.trim()) return;
+  await booksStore.createComment(id, draft.value.trim());
+  comments.value = await booksStore.fetchComments(id);
+  draft.value = "";
+}
+
+async function handleLike() {
+  await booksStore.toggleLike(id);
+}
+
+async function handleRate(rating: number) {
+  await booksStore.rateBook(id, rating);
+  if (book.value) {
+    book.value.avgRating = (await booksStore.fetchBook(id)).avgRating;
+  }
+}
+
+async function handleBuy() {
+  await dashboard.buyBook(id);
+}
+
+async function handleBorrow() {
+  await dashboard.borrowBook(id);
+}
 
 definePageMeta({
   title: "Book — Read in Pace",
 });
-
-function submitReview() {
-  if (!draft.value.trim()) return;
-  const newReview = {
-    user: "You",
-    avatar: "Y",
-    rating: 5,
-    text: draft.value.trim(),
-  };
-  booksStore.addReview(id, newReview);
-  reviews.value = booksStore.getReviews(id);
-  draft.value = "";
-}
 </script>
 
 <template>
@@ -73,11 +93,11 @@ function submitReview() {
             <span
               class="rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-primary"
             >
-              ${{ book.price.toFixed(2) }}
+              ${{ Number(book.price).toFixed(2) }}
             </span>
             <div class="flex items-center gap-1 text-sm text-muted-foreground">
               <Star class="h-4 w-4 fill-foreground text-foreground" />
-              {{ book.rating.toFixed(1) }} · {{ reviews.length }} reviews
+              {{ Number(book.avgRating).toFixed(1) }} · {{ comments.length }} comments
             </div>
           </div>
 
@@ -87,13 +107,13 @@ function submitReview() {
 
           <div class="mt-8 flex flex-col gap-3 sm:flex-row">
             <button
-              @click="dashboard.buy(book.id)"
+              @click="handleBuy"
               class="flex-1 rounded-lg bg-primary px-6 py-3.5 font-medium text-primary-foreground transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/30"
             >
-              Buy Now — ${{ book.price.toFixed(2) }}
+              Buy Now — ${{ Number(book.price).toFixed(2) }}
             </button>
             <button
-              @click="dashboard.borrow(book.id)"
+              @click="handleBorrow"
               class="flex-1 rounded-lg border border-border px-6 py-3.5 font-medium transition-colors hover:bg-muted"
             >
               Borrow
@@ -102,7 +122,7 @@ function submitReview() {
 
           <div class="mt-6 flex items-center gap-2">
             <button
-              @click="booksStore.toggleLike(book.id)"
+              @click="handleLike"
               class="flex h-11 w-11 items-center justify-center rounded-lg border border-border transition-all hover:bg-muted"
               :class="booksStore.liked[book.id] ? 'text-destructive' : ''"
             >
@@ -123,17 +143,35 @@ function submitReview() {
             </button>
           </div>
 
-          <!-- Reviews section -->
+          <!-- Star rating input -->
+          <div class="mt-6 flex items-center gap-1">
+            <span class="text-sm text-muted-foreground mr-2">Your rating:</span>
+            <button
+              v-for="star in 5"
+              :key="star"
+              @click="handleRate(star)"
+              class="cursor-pointer transition-colors hover:text-amber-400"
+              :class="(booksStore.userRating[id] ?? 0) >= star ? 'text-amber-400' : 'text-muted-foreground/30'"
+            >
+              <Star class="h-5 w-5" :class="(booksStore.userRating[id] ?? 0) >= star ? 'fill-current' : ''" />
+            </button>
+            <span v-if="book" class="ml-2 text-sm text-muted-foreground">
+              {{ Number(book.avgRating).toFixed(1) }} avg
+            </span>
+          </div>
+
+          <!-- Comments section -->
           <section class="mt-12 border-t border-border pt-10">
-            <h2 class="text-2xl font-semibold tracking-tight">Reviews</h2>
+            <h2 class="text-2xl font-semibold tracking-tight">Comments</h2>
 
             <form
+              v-if="auth.signedIn"
               @submit.prevent="submitReview"
               class="mt-6 rounded-lg border border-border bg-card p-4"
             >
               <textarea
                 v-model="draft"
-                placeholder="Leave a review…"
+                placeholder="Leave a comment\u2026"
                 rows="3"
                 class="w-full resize-none bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
@@ -142,35 +180,24 @@ function submitReview() {
                   type="submit"
                   class="rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
                 >
-                  Post review
+                  Post comment
                 </button>
               </div>
             </form>
 
             <div class="mt-8 space-y-6">
-              <div v-for="(r, i) in reviews" :key="i" class="flex gap-4">
+              <div v-for="c in comments" :key="c.id" class="flex gap-4">
                 <div
                   class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
                 >
-                  {{ r.avatar }}
+                  {{ c.user.name.charAt(0).toUpperCase() }}
                 </div>
                 <div class="flex-1">
                   <div class="flex items-center gap-2">
-                    <p class="font-medium">{{ r.user }}</p>
-                    <div class="flex">
-                      <Star
-                        v-for="idx in 5"
-                        :key="idx"
-                        class="h-3.5 w-3.5"
-                        :class="
-                          idx <= r.rating
-                            ? 'fill-foreground text-foreground'
-                            : 'text-muted-foreground/30'
-                        "
-                      />
-                    </div>
+                    <p class="font-medium">{{ c.user.name }}</p>
+                    <span class="text-xs text-muted-foreground">{{ new Date(c.createdAt).toLocaleDateString() }}</span>
                   </div>
-                  <p class="mt-1 text-sm text-muted-foreground">{{ r.text }}</p>
+                  <p class="mt-1 text-sm text-muted-foreground">{{ c.text }}</p>
                 </div>
               </div>
             </div>

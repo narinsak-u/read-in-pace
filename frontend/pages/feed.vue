@@ -1,19 +1,47 @@
 <script setup lang="ts">
 import { Flame, ChevronLeft, ChevronRight } from "lucide-vue-next";
 import { useBooksStore } from "~/stores/books";
+import { useAuthStore } from "~/stores/auth";
 
 const booksStore = useBooksStore();
-const trending = booksStore.trendingBooks;
+const auth = useAuthStore();
 const page = ref(1);
-const totalPages = 10;
-
-const categories = ["All", ...new Set(booksStore.books.map((b) => b.category))];
 const activeCategory = ref("All");
+const categories = ref<string[]>(["All"]);
+const showBookForm = ref(false);
+const editingBook = ref<any>(null);
 
-const filteredBooks = computed(() => {
-  if (activeCategory.value === "All") return booksStore.books;
-  return booksStore.books.filter((b) => b.category === activeCategory.value);
+const filteredBooks = computed(() => booksStore.books);
+const totalPages = computed(() => booksStore.meta.totalPages);
+
+watch([page, activeCategory], async ([p, cat]) => {
+  await booksStore.fetchBooks(p, 12, cat === "All" ? undefined : cat);
 });
+
+onMounted(async () => {
+  await Promise.all([
+    booksStore.fetchTrending(),
+    booksStore.fetchBooks(1, 12),
+  ]);
+  const cats = [...new Set(booksStore.books.map((b) => b.category))];
+  categories.value = ["All", ...cats];
+});
+
+function handleEdit(book: any) {
+  editingBook.value = book;
+  showBookForm.value = true;
+}
+
+function handleFormSaved() {
+  showBookForm.value = false;
+  editingBook.value = null;
+  booksStore.fetchBooks(page.value, 12, activeCategory.value === "All" ? undefined : activeCategory.value);
+}
+
+function handleFormClosed() {
+  showBookForm.value = false;
+  editingBook.value = null;
+}
 
 definePageMeta({
   title: "Feed — Read in Pace",
@@ -81,6 +109,13 @@ definePageMeta({
     <section>
       <div class="mb-5 flex items-end justify-between">
         <h2 class="text-2xl font-semibold tracking-tight">Full shelf</h2>
+        <button
+          v-if="auth.adminMode"
+          @click="showBookForm = true"
+          class="rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
+        >
+          + New Book
+        </button>
       </div>
 
       <div class="mb-6 flex flex-wrap gap-2">
@@ -102,7 +137,7 @@ definePageMeta({
       <div
         class="grid grid-cols-1 gap-y-6 gap-x-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
       >
-        <BookCard v-for="b in filteredBooks" :key="b.id" :book="b" />
+        <BookCard v-for="b in filteredBooks" :key="b.id" :book="b" @edit="handleEdit" />
       </div>
 
       <!-- Pagination -->
@@ -115,7 +150,7 @@ definePageMeta({
           <ChevronLeft class="h-4 w-4" />
         </button>
         <button
-          v-for="n in [1, 2, 3]"
+          v-for="n in Math.min(totalPages, 5)"
           :key="n"
           @click="page = n"
           class="h-9 min-w-9 rounded-lg px-3 text-sm font-medium transition-colors"
@@ -125,14 +160,13 @@ definePageMeta({
         >
           {{ n }}
         </button>
-        <span class="px-2 text-muted-foreground">…</span>
+        <span v-if="totalPages > 5" class="px-2 text-muted-foreground">\u2026</span>
         <button
+          v-if="totalPages > 5"
           @click="page = totalPages"
           class="h-9 min-w-9 rounded-lg px-3 text-sm font-medium transition-colors"
           :class="
-            page === totalPages
-              ? 'bg-foreground text-background'
-              : 'hover:bg-muted'
+            page === totalPages ? 'bg-foreground text-background' : 'hover:bg-muted'
           "
         >
           {{ totalPages }}
@@ -146,5 +180,12 @@ definePageMeta({
         </button>
       </div>
     </section>
+
+    <BookFormModal
+      v-if="showBookForm"
+      :book="editingBook"
+      @close="handleFormClosed"
+      @saved="handleFormSaved"
+    />
   </main>
 </template>

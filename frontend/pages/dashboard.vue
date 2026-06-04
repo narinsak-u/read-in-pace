@@ -2,22 +2,23 @@
 import { BookMarked, Library } from "lucide-vue-next";
 import { useAuthStore } from "~/stores/auth";
 import { useDashboardStore } from "~/stores/dashboard";
-import { useBooksStore } from "~/stores/books";
 
 const auth = useAuthStore();
 const dashboard = useDashboardStore();
-const booksStore = useBooksStore();
 const tab = ref<"borrowed" | "purchased">("borrowed");
 
-const borrowedBooks = computed(() =>
-  booksStore.books.filter((b) => dashboard.borrowed.includes(b.id)),
-);
-const purchasedBooks = computed(() =>
-  booksStore.books.filter((b) => dashboard.purchased.includes(b.id)),
-);
+const borrowedBooks = computed(() => dashboard.borrowed);
+const purchasedBooks = computed(() => dashboard.purchased);
 const list = computed(() =>
-  tab.value === "borrowed" ? borrowedBooks.value : purchasedBooks.value,
+  tab.value === "borrowed" ? dashboard.borrowed : dashboard.purchased
 );
+
+onMounted(async () => {
+  await Promise.all([
+    dashboard.fetchBorrows(),
+    dashboard.fetchPurchases(),
+  ]);
+});
 
 definePageMeta({
   title: "My Dashboard — Read in Pace",
@@ -30,7 +31,7 @@ definePageMeta({
     <div class="mb-10">
       <p class="text-sm text-muted-foreground">Welcome back</p>
       <h1 class="mt-1 text-4xl font-semibold tracking-tight">
-        {{ auth.username }}
+        {{ auth.user?.name || "Reader" }}
       </h1>
     </div>
 
@@ -46,7 +47,7 @@ definePageMeta({
             : 'text-muted-foreground hover:text-foreground'
         "
       >
-        <BookMarked class="h-4 w-4" /> Borrowed · {{ borrowedBooks.length }}
+        <BookMarked class="h-4 w-4" /> Borrowed \u00b7 {{ borrowedBooks.length }}
       </button>
       <button
         @click="tab = 'purchased'"
@@ -57,7 +58,7 @@ definePageMeta({
             : 'text-muted-foreground hover:text-foreground'
         "
       >
-        <Library class="h-4 w-4" /> Purchased · {{ purchasedBooks.length }}
+        <Library class="h-4 w-4" /> Purchased \u00b7 {{ purchasedBooks.length }}
       </button>
     </div>
 
@@ -70,7 +71,7 @@ definePageMeta({
           to="/feed"
           class="mt-3 inline-block text-sm font-medium text-primary hover:underline"
         >
-          Find something to read →
+          Find something to read \u2192
         </NuxtLink>
       </div>
     </template>
@@ -78,7 +79,12 @@ definePageMeta({
       <div
         class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
       >
-        <BookCard v-for="b in list" :key="b.id" :book="b" :variant="tab" />
+        <BookCard
+          v-for="item in list"
+          :key="item.borrow?.id || item.purchase?.id"
+          :book="item.book"
+          :variant="tab"
+        />
       </div>
     </template>
   </main>
