@@ -2,33 +2,39 @@ import { Injectable, Inject, NotFoundException, ForbiddenException } from '@nest
 import { DRIZZLE } from '../db/db.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../db/schema';
-import { desc, eq, sql, and, count } from 'drizzle-orm';
+import { desc, eq, sql, count } from 'drizzle-orm';
 
 @Injectable()
 export class BooksService {
   constructor(@Inject(DRIZZLE) private db: NodePgDatabase<typeof schema>) {}
+
+  private bookWithMeta = {
+    id: schema.books.id,
+    title: schema.books.title,
+    author: schema.books.author,
+    price: schema.books.price,
+    cover: schema.books.cover,
+    synopsis: schema.books.synopsis,
+    category: schema.books.category,
+    trending: schema.books.trending,
+    createdBy: schema.books.createdBy,
+    createdAt: schema.books.createdAt,
+    updatedAt: schema.books.updatedAt,
+    likeCount: sql<number>`(SELECT COUNT(*) FROM ${schema.likes} WHERE ${schema.likes.bookId} = ${schema.books.id})`,
+    commentCount: sql<number>`(SELECT COUNT(*) FROM ${schema.comments} WHERE ${schema.comments.bookId} = ${schema.books.id})`,
+    avgRating: sql<number>`COALESCE((SELECT AVG(${schema.ratings.rating}) FROM ${schema.ratings} WHERE ${schema.ratings.bookId} = ${schema.books.id}), 0)`,
+  } as const;
+
+  private avgRatingOrderBy = desc(
+    sql`COALESCE((SELECT AVG(${schema.ratings.rating}) FROM ${schema.ratings} WHERE ${schema.ratings.bookId} = ${schema.books.id}), 0)`,
+  );
 
   async findAll(page: number, limit: number, category?: string) {
     const offset = (page - 1) * limit;
     const where = category ? eq(schema.books.category, category) : undefined;
 
     const data = await this.db
-      .select({
-        id: schema.books.id,
-        title: schema.books.title,
-        author: schema.books.author,
-        price: schema.books.price,
-        cover: schema.books.cover,
-        synopsis: schema.books.synopsis,
-        category: schema.books.category,
-        trending: schema.books.trending,
-        createdBy: schema.books.createdBy,
-        createdAt: schema.books.createdAt,
-        updatedAt: schema.books.updatedAt,
-        likeCount: sql<number>`(SELECT COUNT(*) FROM ${schema.likes} WHERE ${schema.likes.bookId} = ${schema.books.id})`,
-        commentCount: sql<number>`(SELECT COUNT(*) FROM ${schema.comments} WHERE ${schema.comments.bookId} = ${schema.books.id})`,
-        avgRating: sql<number>`COALESCE((SELECT AVG(${schema.ratings.rating}) FROM ${schema.ratings} WHERE ${schema.ratings.bookId} = ${schema.books.id}), 0)`,
-      })
+      .select(this.bookWithMeta)
       .from(schema.books)
       .where(where)
       .limit(limit)
@@ -55,27 +61,21 @@ export class BooksService {
 
   async findOne(id: string) {
     const [book] = await this.db
-      .select({
-        id: schema.books.id,
-        title: schema.books.title,
-        author: schema.books.author,
-        price: schema.books.price,
-        cover: schema.books.cover,
-        synopsis: schema.books.synopsis,
-        category: schema.books.category,
-        trending: schema.books.trending,
-        createdBy: schema.books.createdBy,
-        createdAt: schema.books.createdAt,
-        updatedAt: schema.books.updatedAt,
-        likeCount: sql<number>`(SELECT COUNT(*) FROM ${schema.likes} WHERE ${schema.likes.bookId} = ${schema.books.id})`,
-        commentCount: sql<number>`(SELECT COUNT(*) FROM ${schema.comments} WHERE ${schema.comments.bookId} = ${schema.books.id})`,
-        avgRating: sql<number>`COALESCE((SELECT AVG(${schema.ratings.rating}) FROM ${schema.ratings} WHERE ${schema.ratings.bookId} = ${schema.books.id}), 0)`,
-      })
+      .select(this.bookWithMeta)
       .from(schema.books)
       .where(eq(schema.books.id, id));
 
     if (!book) throw new NotFoundException('Book not found');
     return book;
+  }
+
+  private async findOwner(id: string) {
+    const [book] = await this.db
+      .select({ createdBy: schema.books.createdBy })
+      .from(schema.books)
+      .where(eq(schema.books.id, id));
+    if (!book) throw new NotFoundException('Book not found');
+    return book.createdBy;
   }
 
   async create(data: {
@@ -103,8 +103,8 @@ export class BooksService {
     category: string;
     trending: boolean;
   }>, userId: string) {
-    const existing = await this.findOne(id);
-    if (existing.createdBy !== userId) {
+    const owner = await this.findOwner(id);
+    if (owner !== userId) {
       throw new ForbiddenException('You can only edit your own books');
     }
     const [updated] = await this.db
@@ -116,8 +116,8 @@ export class BooksService {
   }
 
   async remove(id: string, userId: string) {
-    const existing = await this.findOne(id);
-    if (existing.createdBy !== userId) {
+    const owner = await this.findOwner(id);
+    if (owner !== userId) {
       throw new ForbiddenException('You can only delete your own books');
     }
     await this.db.delete(schema.books).where(eq(schema.books.id, id));
@@ -125,24 +125,9 @@ export class BooksService {
 
   async getTrending() {
     return this.db
-      .select({
-        id: schema.books.id,
-        title: schema.books.title,
-        author: schema.books.author,
-        price: schema.books.price,
-        cover: schema.books.cover,
-        synopsis: schema.books.synopsis,
-        category: schema.books.category,
-        trending: schema.books.trending,
-        createdBy: schema.books.createdBy,
-        createdAt: schema.books.createdAt,
-        updatedAt: schema.books.updatedAt,
-        likeCount: sql<number>`(SELECT COUNT(*) FROM ${schema.likes} WHERE ${schema.likes.bookId} = ${schema.books.id})`,
-        commentCount: sql<number>`(SELECT COUNT(*) FROM ${schema.comments} WHERE ${schema.comments.bookId} = ${schema.books.id})`,
-        avgRating: sql<number>`COALESCE((SELECT AVG(${schema.ratings.rating}) FROM ${schema.ratings} WHERE ${schema.ratings.bookId} = ${schema.books.id}), 0)`,
-      })
+      .select(this.bookWithMeta)
       .from(schema.books)
-      .orderBy(desc(sql`COALESCE((SELECT AVG(${schema.ratings.rating}) FROM ${schema.ratings} WHERE ${schema.ratings.bookId} = ${schema.books.id}), 0)`))
+      .orderBy(this.avgRatingOrderBy)
       .limit(3);
   }
 }
