@@ -1,25 +1,56 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import type { Book } from '~/data/books';
+
+interface BorrowRecord {
+  borrow: {
+    id: string;
+    bookId: string;
+    userId: string;
+    borrowedAt: string;
+    returnedAt: string | null;
+  };
+  book: Book;
+}
+
+interface PurchaseRecord {
+  purchase: {
+    id: string;
+    bookId: string;
+    userId: string;
+    purchasedAt: string;
+  };
+  book: Book;
+}
 
 export const useDashboardStore = defineStore('dashboard', () => {
-  const borrowed = ref<string[]>(['2', '5']);
-  const purchased = ref<string[]>(['1', '7', '9']);
+  const borrowed = ref<BorrowRecord[]>([]);
+  const purchased = ref<PurchaseRecord[]>([]);
 
-  function borrow(id: string) {
-    if (!borrowed.value.includes(id)) {
-      borrowed.value = [...borrowed.value, id];
-    }
+  async function fetchBorrows() {
+    const res = await $fetch<BorrowRecord[]>('/api/user/borrows');
+    borrowed.value = res;
   }
 
-  function returnBook(id: string) {
-    borrowed.value = borrowed.value.filter((x) => x !== id);
+  async function fetchPurchases() {
+    const res = await $fetch<PurchaseRecord[]>('/api/user/purchases');
+    purchased.value = res;
   }
 
-  function buy(id: string) {
-    if (!purchased.value.includes(id)) {
-      purchased.value = [...purchased.value, id];
-    }
+  async function borrowBook(id: string) {
+    await $fetch(`/api/books/${id}/borrow`, { method: 'POST' });
+    await fetchBorrows();
   }
 
-  return { borrowed, purchased, borrow, returnBook, buy };
+  async function returnBook(id: string) {
+    await $fetch(`/api/books/${id}/return`, { method: 'POST' });
+    await fetchBorrows();
+  }
+
+  async function buyBook(id: string) {
+    await $fetch(`/api/books/${id}/buy`, { method: 'POST' });
+    await fetchPurchases();
+  }
+
+  return { borrowed, purchased, fetchBorrows, fetchPurchases, borrowBook, returnBook, buyBook };
 });
