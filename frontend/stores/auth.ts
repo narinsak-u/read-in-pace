@@ -14,7 +14,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function fetchSession() {
     try {
-      const session = await $fetch('/api/auth/session');
+      const session = await $fetch('/api/auth/session', {
+        credentials: 'include',
+      });
       if (session?.user) {
         user.value = session.user;
         signedIn.value = true;
