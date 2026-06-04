@@ -1,5 +1,12 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/stores/auth';
+
 const route = useRoute();
+const auth = useAuthStore();
+
+onMounted(() => {
+  auth.fetchSession();
+});
 </script>
 
 <template>

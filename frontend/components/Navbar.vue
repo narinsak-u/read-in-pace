@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   User,
   LogOut,
-  LogIn,
   Shield,
 } from "lucide-vue-next";
 import { useAuthStore } from "~/stores/auth";
@@ -12,6 +11,7 @@ import { useAuthStore } from "~/stores/auth";
 const auth = useAuthStore();
 const open = ref(false);
 const router = useRouter();
+const showAuthModal = ref(false);
 
 function navigate(path: string) {
   open.value = false;
@@ -51,12 +51,12 @@ function navigate(path: string) {
             class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary ring-1 ring-border transition-transform hover:scale-105"
             aria-label="Profile menu"
           >
-            <span v-if="auth.signedIn" class="text-sm font-semibold">
+            <span v-if="auth.signedIn && auth.user" class="text-sm font-semibold">
               {{
-                auth.username
-                  .split(" ")
+                auth.user.name
+                  .split(' ')
                   .map((n: string) => n[0])
-                  .join("")
+                  .join('')
               }}
             </span>
             <User v-else class="h-4 w-4" />
@@ -67,8 +67,8 @@ function navigate(path: string) {
           >
             <template v-if="auth.signedIn">
               <div class="px-3 py-2">
-                <p class="text-sm font-medium">{{ auth.username }}</p>
-                <p class="text-xs text-muted-foreground">alex@readinpace.com</p>
+                <p class="text-sm font-medium">{{ auth.user?.name }}</p>
+                <p class="text-xs text-muted-foreground">{{ auth.user?.email }}</p>
               </div>
               <div class="my-1 h-px bg-border" />
               <button
@@ -97,7 +97,7 @@ function navigate(path: string) {
                 </span>
               </button>
               <button
-                @mousedown="auth.toggleAuth()"
+                @mousedown="auth.signOut()"
                 class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-muted"
               >
                 <LogOut class="h-4 w-4" /> Sign out
@@ -105,10 +105,10 @@ function navigate(path: string) {
             </template>
             <template v-else>
               <button
-                @mousedown="auth.toggleAuth()"
+                @mousedown="showAuthModal = true"
                 class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-muted"
               >
-                <LogIn class="h-4 w-4" /> Sign in
+                Sign in
               </button>
             </template>
           </div>
@@ -116,4 +116,5 @@ function navigate(path: string) {
       </nav>
     </div>
   </header>
+  <AuthModal v-if="showAuthModal" @close="showAuthModal = false" />
 </template>
