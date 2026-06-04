@@ -12,6 +12,7 @@ const showBookForm = ref(false);
 const editingBook = ref<any>(null);
 
 const filteredBooks = computed(() => booksStore.books);
+const trending = computed(() => booksStore.trending);
 const totalPages = computed(() => booksStore.meta.totalPages);
 
 watch([page, activeCategory], async ([p, cat]) => {
