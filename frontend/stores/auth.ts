@@ -1,3 +1,6 @@
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+
 export interface User {
   name: string;
   email: string;
@@ -15,6 +18,9 @@ export const useAuthStore = defineStore('auth', () => {
       if (session?.user) {
         user.value = session.user;
         signedIn.value = true;
+      } else {
+        signedIn.value = false;
+        user.value = null;
       }
     } catch {
       signedIn.value = false;
@@ -33,6 +39,9 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = data.user;
         signedIn.value = true;
       }
+    } catch {
+      signedIn.value = false;
+      user.value = null;
     } finally {
       loading.value = false;
     }
@@ -49,13 +58,16 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = data.user;
         signedIn.value = true;
       }
+    } catch {
+      signedIn.value = false;
+      user.value = null;
     } finally {
       loading.value = false;
     }
   }
 
   async function signOut() {
-    await $fetch('/api/auth/sign-out', { method: 'POST' });
+    await $fetch('/api/auth/sign-out', { method: 'POST' }).catch(() => {});
     signedIn.value = false;
     user.value = null;
   }
