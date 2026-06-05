@@ -69,9 +69,10 @@ definePageMeta({
       </div>
 
       <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
-        <article
+        <NuxtLink
           v-for="(b, i) in trending"
           :key="b.id"
+          :to="'/book/' + b.id"
           class="group relative overflow-hidden max-h-117.5 rounded-lg border border-border bg-card transition-all hover:shadow-2xl hover:shadow-black/5"
           :class="i === 0 ? 'md:col-span-2 md:row-span-2' : ''"
         >
@@ -102,7 +103,7 @@ definePageMeta({
               <p class="text-sm text-white/70">{{ b.author }}</p>
             </div>
           </div>
-        </article>
+        </NuxtLink>
       </div>
     </section>
 
@@ -161,7 +162,7 @@ definePageMeta({
         >
           {{ n }}
         </button>
-        <span v-if="totalPages > 5" class="px-2 text-muted-foreground">\u2026</span>
+        <!-- <span v-if="totalPages > 5" class="px-2 text-muted-foreground">\u2026</span> -->
         <button
           v-if="totalPages > 5"
           @click="page = totalPages"

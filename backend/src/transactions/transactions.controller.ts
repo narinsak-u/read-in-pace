@@ -9,28 +9,19 @@ export class TransactionsController {
 
   @Post('api/books/:id/borrow')
   @UseGuards(AuthGuard)
-  borrow(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  borrow(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.transactionsService.borrow(id, user.id);
   }
 
   @Post('api/books/:id/return')
   @UseGuards(AuthGuard)
-  returnBook(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  returnBook(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.transactionsService.returnBook(id, user.id);
   }
 
   @Post('api/books/:id/buy')
   @UseGuards(AuthGuard)
-  buy(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  buy(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.transactionsService.buy(id, user.id);
   }
 

@@ -1,5 +1,11 @@
 import { sql } from 'drizzle-orm';
-import { pgTable, text, boolean, timestamp, integer } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  boolean,
+  timestamp,
+  integer,
+} from 'drizzle-orm/pg-core';
 import { numeric, primaryKey } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('user', {
@@ -65,7 +71,9 @@ export const verification = pgTable('verification', {
 });
 
 export const books = pgTable('books', {
-  id: text('id').primaryKey().default(sql`gen_random_uuid()`),
+  id: text('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   title: text('title').notNull(),
   author: text('author').notNull(),
   price: numeric('price', { precision: 10, scale: 2 }).notNull(),
@@ -83,20 +91,24 @@ export const books = pgTable('books', {
     .$onUpdate(() => new Date()),
 });
 
-export const likes = pgTable('likes', {
-  bookId: text('book_id')
-    .notNull()
-    .references(() => books.id, { onDelete: 'cascade' }),
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.bookId, table.userId] }),
-]);
+export const likes = pgTable(
+  'likes',
+  {
+    bookId: text('book_id')
+      .notNull()
+      .references(() => books.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.bookId, table.userId] })],
+);
 
 export const comments = pgTable('comments', {
-  id: text('id').primaryKey().default(sql`gen_random_uuid()`),
+  id: text('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   bookId: text('book_id')
     .notNull()
     .references(() => books.id, { onDelete: 'cascade' }),
@@ -111,21 +123,25 @@ export const comments = pgTable('comments', {
     .$onUpdate(() => new Date()),
 });
 
-export const ratings = pgTable('ratings', {
-  bookId: text('book_id')
-    .notNull()
-    .references(() => books.id, { onDelete: 'cascade' }),
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
-  rating: integer('rating').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.bookId, table.userId] }),
-]);
+export const ratings = pgTable(
+  'ratings',
+  {
+    bookId: text('book_id')
+      .notNull()
+      .references(() => books.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    rating: integer('rating').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.bookId, table.userId] })],
+);
 
 export const borrows = pgTable('borrows', {
-  id: text('id').primaryKey().default(sql`gen_random_uuid()`),
+  id: text('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   bookId: text('book_id')
     .notNull()
     .references(() => books.id, { onDelete: 'cascade' }),
@@ -137,7 +153,9 @@ export const borrows = pgTable('borrows', {
 });
 
 export const purchases = pgTable('purchases', {
-  id: text('id').primaryKey().default(sql`gen_random_uuid()`),
+  id: text('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   bookId: text('book_id')
     .notNull()
     .references(() => books.id, { onDelete: 'cascade' }),

@@ -47,7 +47,7 @@ definePageMeta({
             : 'text-muted-foreground hover:text-foreground'
         "
       >
-        <BookMarked class="h-4 w-4" /> Borrowed \u00b7 {{ borrowedBooks.length }}
+        <BookMarked class="h-4 w-4" /> Borrowed {{ borrowedBooks.length }}
       </button>
       <button
         @click="tab = 'purchased'"
@@ -58,7 +58,7 @@ definePageMeta({
             : 'text-muted-foreground hover:text-foreground'
         "
       >
-        <Library class="h-4 w-4" /> Purchased \u00b7 {{ purchasedBooks.length }}
+        <Library class="h-4 w-4" /> Purchased {{ purchasedBooks.length }}
       </button>
     </div>
 

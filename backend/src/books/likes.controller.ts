@@ -9,10 +9,7 @@ export class LikesController {
   constructor(private readonly likesService: LikesService) {}
 
   @Post()
-  toggle(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  toggle(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.likesService.toggle(id, user.id);
   }
 }

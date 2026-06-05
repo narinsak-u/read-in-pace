@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { BooksService } from './books.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -33,7 +43,8 @@ export class BooksController {
   @Post()
   @UseGuards(AuthGuard)
   create(
-    @Body() body: {
+    @Body()
+    body: {
       title: string;
       author: string;
       price: string;
@@ -51,7 +62,8 @@ export class BooksController {
   @UseGuards(AuthGuard)
   update(
     @Param('id') id: string,
-    @Body() body: Partial<{
+    @Body()
+    body: Partial<{
       title: string;
       author: string;
       price: string;
@@ -67,10 +79,7 @@ export class BooksController {
 
   @Delete(':id')
   @UseGuards(AuthGuard)
-  remove(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  remove(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.booksService.remove(id, user.id);
   }
 }

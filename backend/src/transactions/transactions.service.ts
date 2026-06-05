@@ -1,4 +1,9 @@
-import { Injectable, Inject, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { DRIZZLE } from '../db/db.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../db/schema';
@@ -12,11 +17,13 @@ export class TransactionsService {
     const active = await this.db
       .select()
       .from(schema.borrows)
-      .where(and(
-        eq(schema.borrows.bookId, bookId),
-        eq(schema.borrows.userId, userId),
-        isNull(schema.borrows.returnedAt),
-      ));
+      .where(
+        and(
+          eq(schema.borrows.bookId, bookId),
+          eq(schema.borrows.userId, userId),
+          isNull(schema.borrows.returnedAt),
+        ),
+      );
 
     if (active.length > 0) {
       throw new ConflictException('Book already borrowed');
@@ -33,11 +40,13 @@ export class TransactionsService {
     const [active] = await this.db
       .select()
       .from(schema.borrows)
-      .where(and(
-        eq(schema.borrows.bookId, bookId),
-        eq(schema.borrows.userId, userId),
-        isNull(schema.borrows.returnedAt),
-      ));
+      .where(
+        and(
+          eq(schema.borrows.bookId, bookId),
+          eq(schema.borrows.userId, userId),
+          isNull(schema.borrows.returnedAt),
+        ),
+      );
 
     if (!active) {
       throw new BadRequestException('No active borrow to return');
@@ -55,10 +64,12 @@ export class TransactionsService {
     const existing = await this.db
       .select()
       .from(schema.purchases)
-      .where(and(
-        eq(schema.purchases.bookId, bookId),
-        eq(schema.purchases.userId, userId),
-      ));
+      .where(
+        and(
+          eq(schema.purchases.bookId, bookId),
+          eq(schema.purchases.userId, userId),
+        ),
+      );
 
     if (existing.length > 0) {
       return existing[0];
@@ -94,10 +105,12 @@ export class TransactionsService {
       })
       .from(schema.borrows)
       .innerJoin(schema.books, eq(schema.borrows.bookId, schema.books.id))
-      .where(and(
-        eq(schema.borrows.userId, userId),
-        isNull(schema.borrows.returnedAt),
-      ))
+      .where(
+        and(
+          eq(schema.borrows.userId, userId),
+          isNull(schema.borrows.returnedAt),
+        ),
+      )
       .orderBy(sql`${schema.borrows.borrowedAt} DESC`);
   }
 

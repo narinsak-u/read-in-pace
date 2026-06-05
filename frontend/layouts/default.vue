@@ -1,13 +1,7 @@
 <script setup lang="ts">
 import { Toaster } from 'vue-sonner';
-import { useAuthStore } from '~/stores/auth';
 
 const route = useRoute();
-const auth = useAuthStore();
-
-onMounted(() => {
-  auth.fetchSession();
-});
 </script>
 
 <template>

@@ -14,6 +14,7 @@ const auth = useAuthStore();
 const book = ref<any>(null);
 const comments = ref<any[]>([]);
 const draft = ref("");
+const showCommentForm = ref(false);
 
 onMounted(async () => {
   book.value = await booksStore.fetchBook(id);
@@ -132,7 +133,9 @@ definePageMeta({
               />
             </button>
             <button
+              @click="showCommentForm = !showCommentForm"
               class="flex h-11 w-11 items-center justify-center rounded-lg border border-border transition-colors hover:bg-muted"
+              :class="showCommentForm ? 'bg-muted' : ''"
             >
               <MessageSquare class="h-4 w-4" />
             </button>
@@ -165,13 +168,13 @@ definePageMeta({
             <h2 class="text-2xl font-semibold tracking-tight">Comments</h2>
 
             <form
-              v-if="auth.signedIn"
+              v-if="auth.signedIn && showCommentForm"
               @submit.prevent="submitReview"
               class="mt-6 rounded-lg border border-border bg-card p-4"
             >
               <textarea
                 v-model="draft"
-                placeholder="Leave a comment\u2026"
+                placeholder="Leave a comment"
                 rows="3"
                 class="w-full resize-none bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />

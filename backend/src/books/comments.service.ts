@@ -1,4 +1,9 @@
-import { Injectable, Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { DRIZZLE } from '../db/db.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../db/schema';
@@ -44,8 +49,11 @@ export class CommentsService {
       .where(eq(schema.comments.id, commentId));
 
     if (!comment) throw new NotFoundException('Comment not found');
-    if (comment.userId !== userId) throw new ForbiddenException('You can only delete your own comments');
+    if (comment.userId !== userId)
+      throw new ForbiddenException('You can only delete your own comments');
 
-    await this.db.delete(schema.comments).where(eq(schema.comments.id, commentId));
+    await this.db
+      .delete(schema.comments)
+      .where(eq(schema.comments.id, commentId));
   }
 }

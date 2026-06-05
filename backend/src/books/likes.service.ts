@@ -12,22 +12,18 @@ export class LikesService {
     const existing = await this.db
       .select()
       .from(schema.likes)
-      .where(and(
-        eq(schema.likes.bookId, bookId),
-        eq(schema.likes.userId, userId),
-      ));
+      .where(
+        and(eq(schema.likes.bookId, bookId), eq(schema.likes.userId, userId)),
+      );
 
     if (existing.length > 0) {
       await this.db
         .delete(schema.likes)
-        .where(and(
-          eq(schema.likes.bookId, bookId),
-          eq(schema.likes.userId, userId),
-        ));
+        .where(
+          and(eq(schema.likes.bookId, bookId), eq(schema.likes.userId, userId)),
+        );
     } else {
-      await this.db
-        .insert(schema.likes)
-        .values({ bookId, userId });
+      await this.db.insert(schema.likes).values({ bookId, userId });
     }
 
     const [{ count: likeCount }] = await this.db

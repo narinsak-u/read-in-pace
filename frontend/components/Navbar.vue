@@ -44,6 +44,7 @@ function navigate(path: string) {
           <LayoutDashboard class="h-4 w-4" /> My Dashboard
         </NuxtLink>
 
+        <!-- Profile -->
         <div class="relative ml-2">
           <button
             @click="open = !open"
@@ -82,7 +83,8 @@ function navigate(path: string) {
                 class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-muted"
               >
                 <span class="flex items-center gap-2"
-                  ><Shield class="h-4 w-4" /> Admin mode</span
+                  >
+                    <Shield class="h-4 w-4" /> Admin mode</span
                 >
                 <span
                   class="relative h-4 w-7 rounded-full transition-colors"

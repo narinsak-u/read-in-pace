@@ -33,6 +33,11 @@ async function handleSubmit() {
   }
 }
 
+onMounted(() => {
+  email.value = 'admin@gmail.com';
+  password.value = '123456789';
+});
+
 function switchTab(t: 'sign-in' | 'sign-up') {
   tab.value = t;
   error.value = '';

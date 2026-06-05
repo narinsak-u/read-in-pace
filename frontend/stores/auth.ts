@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import { authClient, signIn, signUp, signOut } from '~/lib/auth-client';
 
 export interface User {
   name: string;
@@ -12,31 +13,23 @@ export const useAuthStore = defineStore('auth', () => {
   const adminMode = ref(false);
   const loading = ref(false);
 
-  async function fetchSession() {
-    try {
-      const session = await $fetch('/api/auth/session', {
-        credentials: 'include',
-      });
-      if (session?.user) {
-        user.value = session.user;
-        signedIn.value = true;
-      } else {
-        signedIn.value = false;
-        user.value = null;
-      }
-    } catch {
-      signedIn.value = false;
-      user.value = null;
-    }
-  }
+  const session = authClient.useSession();
 
-  async function signIn(email: string, password: string) {
+  watch(session, (val) => {
+    if (val?.data?.user) {
+      user.value = val.data.user;
+      signedIn.value = true;
+    } else {
+      user.value = null;
+      signedIn.value = false;
+    }
+  }, { immediate: true });
+
+  async function authSignIn(email: string, password: string) {
     loading.value = true;
     try {
-      const data = await $fetch('/api/auth/sign-in/email', {
-        method: 'POST',
-        body: { email, password },
-      });
+      const { data, error } = await signIn.email({ email, password });
+      if (error) throw error;
       if (data?.user) {
         user.value = data.user;
         signedIn.value = true;
@@ -49,13 +42,11 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function signUp(name: string, email: string, password: string) {
+  async function authSignUp(name: string, email: string, password: string) {
     loading.value = true;
     try {
-      const data = await $fetch('/api/auth/sign-up/email', {
-        method: 'POST',
-        body: { name, email, password },
-      });
+      const { data, error } = await signUp.email({ name, email, password });
+      if (error) throw error;
       if (data?.user) {
         user.value = data.user;
         signedIn.value = true;
@@ -68,8 +59,8 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function signOut() {
-    await $fetch('/api/auth/sign-out', { method: 'POST' }).catch(() => {});
+  async function authSignOut() {
+    await signOut();
     signedIn.value = false;
     user.value = null;
   }
@@ -83,10 +74,9 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     adminMode,
     loading,
-    fetchSession,
-    signIn,
-    signUp,
-    signOut,
+    signIn: authSignIn,
+    signUp: authSignUp,
+    signOut: authSignOut,
     toggleAdmin,
   };
 });

@@ -10,7 +10,9 @@ export class RatingsService {
 
   async upsert(bookId: string, userId: string, rating: number) {
     if (rating < 1 || rating > 5 || !Number.isInteger(rating)) {
-      throw new BadRequestException('Rating must be an integer between 1 and 5');
+      throw new BadRequestException(
+        'Rating must be an integer between 1 and 5',
+      );
     }
 
     await this.db

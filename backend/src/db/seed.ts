@@ -1,9 +1,23 @@
 import 'dotenv/config';
 import crypto from 'node:crypto';
+import { scrypt, randomBytes } from 'node:crypto';
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import bcrypt from 'bcryptjs';
 import * as schema from './schema';
+
+async function hashPassword(password: string): Promise<string> {
+  const salt = randomBytes(16).toString('hex');
+  const key = await new Promise<Buffer>((resolve, reject) => {
+    scrypt(
+      password.normalize('NFKC'),
+      salt,
+      64,
+      { N: 16384, r: 16, p: 1, maxmem: 128 * 16384 * 16 * 2 },
+      (err, buf) => (err ? reject(err) : resolve(buf)),
+    );
+  });
+  return `${salt}:${key.toString('hex')}`;
+}
 
 const covers = [
   'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=600&auto=format&fit=crop',
@@ -42,9 +56,21 @@ const titles: [string, string][] = [
 ];
 
 const categories = [
-  'Fiction', 'How-to', 'Fiction', 'How-to', 'Fiction',
-  'Fiction', 'Fiction', 'How-to', 'Fiction', 'Manga',
-  'Fiction', 'Fiction', 'Fiction', 'How-to', 'Manga',
+  'Fiction',
+  'How-to',
+  'Fiction',
+  'How-to',
+  'Fiction',
+  'Fiction',
+  'Fiction',
+  'How-to',
+  'Fiction',
+  'Manga',
+  'Fiction',
+  'Fiction',
+  'Fiction',
+  'How-to',
+  'Manga',
 ];
 
 const synopses = [
@@ -82,24 +108,30 @@ async function seed() {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   const db = drizzle(pool, { schema });
 
-  const passwordHash = await bcrypt.hash('seed123', 10);
+  const passwordHash = await hashPassword('seed123');
 
   // --- Users ---
 
-  await db.insert(schema.user).values({
-    id: '00000000-0000-0000-0000-000000000001',
-    name: 'Seed User',
-    email: 'seed@readinpace.com',
-    emailVerified: true,
-  }).onConflictDoNothing();
+  await db
+    .insert(schema.user)
+    .values({
+      id: '00000000-0000-0000-0000-000000000001',
+      name: 'Seed User',
+      email: 'seed@readinpace.com',
+      emailVerified: true,
+    })
+    .onConflictDoNothing();
 
-  await db.insert(schema.account).values({
-    id: crypto.randomUUID(),
-    userId: '00000000-0000-0000-0000-000000000001',
-    providerId: 'email',
-    accountId: 'seed@readinpace.com',
-    password: passwordHash,
-  }).onConflictDoNothing();
+  await db
+    .insert(schema.account)
+    .values({
+      id: crypto.randomUUID(),
+      userId: '00000000-0000-0000-0000-000000000001',
+      providerId: 'credential',
+      accountId: 'seed@readinpace.com',
+      password: passwordHash,
+    })
+    .onConflictDoNothing();
 
   console.log('User created: seed@readinpace.com / seed123');
 
@@ -110,13 +142,25 @@ async function seed() {
   ];
 
   for (const u of commentUsers) {
-    await db.insert(schema.user).values({
-      id: u.id, name: u.name, email: u.email, emailVerified: true,
-    }).onConflictDoNothing();
-    await db.insert(schema.account).values({
-      id: crypto.randomUUID(), userId: u.id, providerId: 'email',
-      accountId: u.email, password: passwordHash,
-    }).onConflictDoNothing();
+    await db
+      .insert(schema.user)
+      .values({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        emailVerified: true,
+      })
+      .onConflictDoNothing();
+    await db
+      .insert(schema.account)
+      .values({
+        id: crypto.randomUUID(),
+        userId: u.id,
+        providerId: 'credential',
+        accountId: u.email,
+        password: passwordHash,
+      })
+      .onConflictDoNothing();
   }
 
   console.log(`Created ${commentUsers.length} commenter accounts`);
@@ -144,7 +188,10 @@ async function seed() {
 
   // --- Comments (2-3 per book) ---
 
-  const allUsers = ['00000000-0000-0000-0000-000000000001', ...commentUsers.map((u) => u.id)];
+  const allUsers = [
+    '00000000-0000-0000-0000-000000000001',
+    ...commentUsers.map((u) => u.id),
+  ];
   let commentCount = 0;
 
   for (const bookId of bookIds) {
@@ -158,7 +205,8 @@ async function seed() {
       } while (used.has(userId));
       used.add(userId);
 
-      const text = commentTexts[Math.floor(Math.random() * commentTexts.length)];
+      const text =
+        commentTexts[Math.floor(Math.random() * commentTexts.length)];
       await db.insert(schema.comments).values({ bookId, userId, text });
       commentCount++;
     }
@@ -171,11 +219,16 @@ async function seed() {
   let ratingCount = 0;
   for (const bookId of bookIds) {
     const raterCount = 1 + Math.floor(Math.random() * 4);
-    const raterPool = [...allUsers].sort(() => Math.random() - 0.5).slice(0, raterCount);
+    const raterPool = [...allUsers]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, raterCount);
 
     for (const userId of raterPool) {
       const rating = 3 + Math.floor(Math.random() * 3);
-      await db.insert(schema.ratings).values({ bookId, userId, rating }).onConflictDoNothing();
+      await db
+        .insert(schema.ratings)
+        .values({ bookId, userId, rating })
+        .onConflictDoNothing();
       ratingCount++;
     }
   }
