@@ -7,8 +7,8 @@ const auth = useAuthStore();
 
 const { page, activeCategory, categories, totalPages, setPage, setCategory } = useShelf();
 
-const showBookForm = ref(false);
-const editingBook = ref<import('~/stores/books').BookWithMeta | null>(null);
+const showBookForm = shallowRef(false);
+const editingBook = shallowRef<import('~/stores/books').BookWithMeta | null>(null);
 
 function handleEdit(book: import('~/stores/books').BookWithMeta) {
   editingBook.value = book;

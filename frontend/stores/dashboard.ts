@@ -83,5 +83,14 @@ export const useDashboardStore = defineStore('dashboard', () => {
     await fetchPurchases();
   }
 
-  return { borrowed, purchased, fetchBorrows, fetchPurchases, borrowBook, returnBook, buyBook, confirmPurchase };
+  return {
+    borrowed: readonly(borrowed),
+    purchased: readonly(purchased),
+    fetchBorrows,
+    fetchPurchases,
+    borrowBook,
+    returnBook,
+    buyBook,
+    confirmPurchase,
+  };
 });

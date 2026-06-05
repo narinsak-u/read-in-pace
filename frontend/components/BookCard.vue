@@ -22,6 +22,8 @@ const dashboard = useDashboardStore();
 const booksStore = useBooksStore();
 const auth = useAuthStore();
 
+const formattedPrice = computed(() => Number(props.book.price).toFixed(2));
+
 const borrowBtnClass = computed(() => {
   return props.book.isAvailable && props.book.inStock >= 1
     ? "cursor-pointer border-border hover:bg-muted"
@@ -117,7 +119,7 @@ async function handleDelete() {
             @click="dashboard.buyBook(book.id)"
             class="flex-1 rounded-lg bg-primary cursor-pointer px-3 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
-            Buy ${{ Number(book.price).toFixed(2) }}
+            Buy ${{ formattedPrice }}
           </button>
           <button
             @click="dashboard.borrowBook(book.id)"

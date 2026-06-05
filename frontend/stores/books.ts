@@ -35,13 +35,13 @@ export interface Comment {
 }
 
 export const useBooksStore = defineStore('books', () => {
-  const books = ref<BookWithMeta[]>([]);
-  const trending = ref<BookWithMeta[]>([]);
-  const currentBook = ref<BookWithMeta | null>(null);
-  const comments = ref<Comment[]>([]);
-  const liked = ref<Record<string, boolean>>({});
-  const userRating = ref<Record<string, number>>({});
-  const meta = ref<PaginationMeta>({ page: 1, limit: 12, total: 0, totalPages: 0 });
+  const books = shallowRef<BookWithMeta[]>([]);
+  const trending = shallowRef<BookWithMeta[]>([]);
+  const currentBook = shallowRef<BookWithMeta | null>(null);
+  const comments = shallowRef<Comment[]>([]);
+  const liked = shallowRef<Record<string, boolean>>({});
+  const userRating = shallowRef<Record<string, number>>({});
+  const meta = shallowRef<PaginationMeta>({ page: 1, limit: 12, total: 0, totalPages: 0 });
   const loading = shallowRef(false);
 
   async function fetchBooks(page = 1, limit = 12, category?: string) {
@@ -201,7 +201,14 @@ export const useBooksStore = defineStore('books', () => {
   }
 
   return {
-    books, trending, currentBook, comments, liked, userRating, meta, loading,
+    books: readonly(books),
+    trending: readonly(trending),
+    currentBook: readonly(currentBook),
+    comments: readonly(comments),
+    liked: readonly(liked),
+    userRating: readonly(userRating),
+    meta: readonly(meta),
+    loading: readonly(loading),
     fetchBooks, fetchTrending, fetchBook, createBook, updateBook, deleteBook,
     toggleLike, fetchLikeStatus, fetchUserRating, fetchComments, createComment, deleteComment, rateBook,
   };

@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { Star } from 'lucide-vue-next';
 
-defineProps<{
+const props = defineProps<{
   avgRating: number;
   userRating: number | null;
 }>();
@@ -9,6 +10,8 @@ defineProps<{
 const emit = defineEmits<{
   rate: [rating: number];
 }>();
+
+const formattedAvgRating = computed(() => Number(props.avgRating).toFixed(1));
 
 function isStarActive(star: number, userRating: number | null): boolean {
   return (userRating ?? 0) >= star;
@@ -31,7 +34,7 @@ function isStarActive(star: number, userRating: number | null): boolean {
       />
     </button>
     <span class="ml-2 text-sm text-muted-foreground">
-      {{ Number(avgRating).toFixed(1) }} avg
+      {{ formattedAvgRating }} avg
     </span>
   </div>
 </template>
