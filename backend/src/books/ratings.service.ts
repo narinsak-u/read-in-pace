@@ -2,11 +2,24 @@ import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { DRIZZLE } from '../db/db.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 
 @Injectable()
 export class RatingsService {
   constructor(@Inject(DRIZZLE) private db: NodePgDatabase<typeof schema>) {}
+
+  async check(bookId: string, userId: string) {
+    const [row] = await this.db
+      .select({ rating: schema.ratings.rating })
+      .from(schema.ratings)
+      .where(
+        and(
+          eq(schema.ratings.bookId, bookId),
+          eq(schema.ratings.userId, userId),
+        ),
+      );
+    return { userRating: row?.rating ?? null };
+  }
 
   async upsert(bookId: string, userId: string, rating: number) {
     if (rating < 1 || rating > 5 || !Number.isInteger(rating)) {

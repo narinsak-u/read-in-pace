@@ -19,6 +19,10 @@ const showCommentForm = ref(false);
 onMounted(async () => {
   book.value = await booksStore.fetchBook(id);
   comments.value = await booksStore.fetchComments(id);
+  if (auth.signedIn) {
+    booksStore.fetchLikeStatus(id);
+    booksStore.fetchUserRating(id);
+  }
 });
 
 async function submitReview() {
@@ -124,7 +128,7 @@ definePageMeta({
           <div class="mt-6 flex items-center gap-2">
             <button
               @click="handleLike"
-              class="flex h-11 w-11 items-center justify-center rounded-lg border border-border transition-all hover:bg-muted"
+              class="flex h-11 w-11 items-center cursor-pointer justify-center rounded-lg border border-border transition-all hover:bg-muted"
               :class="booksStore.liked[book.id] ? 'text-destructive' : ''"
             >
               <Heart
@@ -134,13 +138,13 @@ definePageMeta({
             </button>
             <button
               @click="showCommentForm = !showCommentForm"
-              class="flex h-11 w-11 items-center justify-center rounded-lg border border-border transition-colors hover:bg-muted"
+              class="flex h-11 w-11 items-center justify-center cursor-pointer rounded-lg border border-border transition-colors hover:bg-muted"
               :class="showCommentForm ? 'bg-muted' : ''"
             >
               <MessageSquare class="h-4 w-4" />
             </button>
             <button
-              class="flex h-11 w-11 items-center justify-center rounded-lg border border-border transition-colors hover:bg-muted"
+              class="flex h-11 w-11 items-center cursor-pointer justify-center rounded-lg border border-border transition-colors hover:bg-muted"
             >
               <Share2 class="h-4 w-4" />
             </button>

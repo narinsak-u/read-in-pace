@@ -8,6 +8,16 @@ import { eq, and, sql } from 'drizzle-orm';
 export class LikesService {
   constructor(@Inject(DRIZZLE) private db: NodePgDatabase<typeof schema>) {}
 
+  async check(bookId: string, userId: string) {
+    const existing = await this.db
+      .select()
+      .from(schema.likes)
+      .where(
+        and(eq(schema.likes.bookId, bookId), eq(schema.likes.userId, userId)),
+      );
+    return { liked: existing.length > 0 };
+  }
+
   async toggle(bookId: string, userId: string) {
     const existing = await this.db
       .select()

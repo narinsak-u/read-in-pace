@@ -123,6 +123,30 @@ export const useBooksStore = defineStore('books', () => {
     }
   }
 
+  async function fetchLikeStatus(bookId: string) {
+    try {
+      const res = await $fetch<{ liked: boolean }>(`/api/books/${bookId}/like`, {
+        method: 'GET',
+      });
+      liked.value = { ...liked.value, [bookId]: res.liked };
+    } catch {
+      // not signed in — ignore
+    }
+  }
+
+  async function fetchUserRating(bookId: string) {
+    try {
+      const res = await $fetch<{ userRating: number | null }>(`/api/books/${bookId}/rate`, {
+        method: 'GET',
+      });
+      if (res.userRating !== null) {
+        userRating.value = { ...userRating.value, [bookId]: res.userRating };
+      }
+    } catch {
+      // not signed in — ignore
+    }
+  }
+
   async function fetchComments(bookId: string) {
     const res = await $fetch<Comment[]>(`/api/books/${bookId}/comments`);
     comments.value = res;
@@ -169,6 +193,6 @@ export const useBooksStore = defineStore('books', () => {
   return {
     books, trending, currentBook, comments, liked, userRating, meta, loading,
     fetchBooks, fetchTrending, fetchBook, createBook, updateBook, deleteBook,
-    toggleLike, fetchComments, createComment, deleteComment, rateBook,
+    toggleLike, fetchLikeStatus, fetchUserRating, fetchComments, createComment, deleteComment, rateBook,
   };
 });
