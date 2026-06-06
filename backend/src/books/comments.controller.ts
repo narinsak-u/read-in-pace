@@ -10,6 +10,7 @@ import {
 import { CommentsService } from './comments.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { CreateCommentDto } from './dto/create-comment.dto';
 
 @Controller('api/books/:id/comments')
 export class CommentsController {
@@ -24,10 +25,10 @@ export class CommentsController {
   @UseGuards(AuthGuard)
   create(
     @Param('id') id: string,
-    @Body('text') text: string,
+    @Body() dto: CreateCommentDto,
     @CurrentUser() user: { id: string },
   ) {
-    return this.commentsService.create(id, user.id, text);
+    return this.commentsService.create(id, user.id, dto);
   }
 
   @Delete(':commentId')

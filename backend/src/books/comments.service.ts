@@ -8,6 +8,7 @@ import { DRIZZLE } from '../db/db.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
+import { CreateCommentDto } from './dto/create-comment.dto';
 
 @Injectable()
 export class CommentsService {
@@ -34,10 +35,10 @@ export class CommentsService {
       .orderBy(desc(schema.comments.createdAt));
   }
 
-  async create(bookId: string, userId: string, text: string) {
+  async create(bookId: string, userId: string, dto: CreateCommentDto) {
     const [comment] = await this.db
       .insert(schema.comments)
-      .values({ bookId, userId, text })
+      .values({ bookId, userId, text: dto.text })
       .returning();
     return comment;
   }

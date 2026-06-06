@@ -4,16 +4,22 @@ import {
   ConflictException,
   BadRequestException,
   NotFoundException,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import { DRIZZLE } from '../db/db.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { STRIPE } from './stripe.provider';
+import StripeConstructor from 'stripe';
 import * as schema from '../db/schema';
 import { eq, and, isNull, sql, gt } from 'drizzle-orm';
 
+type StripeClient = ReturnType<typeof StripeConstructor>;
+
 @Injectable()
 export class TransactionsService {
-  constructor(@Inject(DRIZZLE) private db: NodePgDatabase<typeof schema>) {}
+  constructor(
+    @Inject(DRIZZLE) private db: NodePgDatabase<typeof schema>,
+    @Inject(STRIPE) private stripe: StripeClient,
+  ) {}
 
   private async getBook(bookId: string) {
     const [book] = await this.db
@@ -31,47 +37,60 @@ export class TransactionsService {
   }
 
   async borrow(bookId: string, userId: string) {
-    const book = await this.getBook(bookId);
-    if (!book.isAvailable) {
-      throw new ConflictException(
-        'Book is currently not available for borrowing',
-      );
-    }
+    return this.db.transaction(async (tx) => {
+      const [book] = await tx
+        .select({
+          id: schema.books.id,
+          isAvailable: schema.books.isAvailable,
+          inStock: schema.books.inStock,
+        })
+        .from(schema.books)
+        .where(eq(schema.books.id, bookId))
+        .for('update');
 
-    const active = await this.db
-      .select()
-      .from(schema.borrows)
-      .where(
-        and(
-          eq(schema.borrows.bookId, bookId),
-          eq(schema.borrows.userId, userId),
-          isNull(schema.borrows.returnedAt),
-        ),
-      );
+      if (!book) throw new NotFoundException('Book not found');
+      if (!book.isAvailable) {
+        throw new ConflictException(
+          'Book is currently not available for borrowing',
+        );
+      }
 
-    if (active.length > 0) {
-      throw new ConflictException('Book already borrowed');
-    }
+      const [active] = await tx
+        .select({ id: schema.borrows.id })
+        .from(schema.borrows)
+        .where(
+          and(
+            eq(schema.borrows.bookId, bookId),
+            eq(schema.borrows.userId, userId),
+            isNull(schema.borrows.returnedAt),
+          ),
+        );
 
-    const remaining = book.inStock - 1;
-    await this.db
-      .update(schema.books)
-      .set({
-        inStock: remaining,
-        isAvailable: remaining > 1,
-      })
-      .where(eq(schema.books.id, bookId));
+      if (active) {
+        throw new ConflictException('Book already borrowed');
+      }
 
-    const [borrow] = await this.db
-      .insert(schema.borrows)
-      .values({ bookId, userId })
-      .returning();
-    return borrow;
+      const remaining = book.inStock - 1;
+      await tx
+        .update(schema.books)
+        .set({
+          inStock: remaining,
+          isAvailable: remaining > 1,
+        })
+        .where(eq(schema.books.id, bookId));
+
+      const [borrow] = await tx
+        .insert(schema.borrows)
+        .values({ bookId, userId })
+        .returning();
+
+      return borrow;
+    });
   }
 
   async returnBook(bookId: string, userId: string) {
     const [active] = await this.db
-      .select()
+      .select({ id: schema.borrows.id })
       .from(schema.borrows)
       .where(
         and(
@@ -98,6 +117,7 @@ export class TransactionsService {
       .set({ returnedAt: new Date() })
       .where(eq(schema.borrows.id, active.id))
       .returning();
+
     return borrow;
   }
 
@@ -109,14 +129,7 @@ export class TransactionsService {
       );
     }
 
-    const Stripe = require('stripe');
-    const stripeKey = process.env.STRIPE_SECRET_KEY;
-    if (!stripeKey) {
-      throw new InternalServerErrorException('Stripe is not configured');
-    }
-    const stripe = new Stripe(stripeKey);
-
-    const session = await stripe.checkout.sessions.create({
+    const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [
         {
@@ -137,14 +150,7 @@ export class TransactionsService {
   }
 
   async confirmPurchase(sessionId: string, userId: string) {
-    const Stripe = require('stripe');
-    const stripeKey = process.env.STRIPE_SECRET_KEY;
-    if (!stripeKey) {
-      throw new InternalServerErrorException('Stripe is not configured');
-    }
-    const stripe = new Stripe(stripeKey);
-
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const session = await this.stripe.checkout.sessions.retrieve(sessionId);
     if (
       session.payment_status !== 'paid' ||
       session.metadata?.userId !== userId
@@ -154,31 +160,31 @@ export class TransactionsService {
 
     const bookId = session.metadata!.bookId;
 
-    const existing = await this.db
-      .select()
-      .from(schema.purchases)
-      .where(
-        and(
-          eq(schema.purchases.bookId, bookId),
-          eq(schema.purchases.userId, userId),
-        ),
-      );
+    return this.db.transaction(async (tx) => {
+      const [existing] = await tx
+        .select({ id: schema.purchases.id })
+        .from(schema.purchases)
+        .where(
+          and(
+            eq(schema.purchases.bookId, bookId),
+            eq(schema.purchases.userId, userId),
+          ),
+        );
 
-    if (existing.length > 0) {
-      return existing[0];
-    }
+      if (existing) return existing;
 
-    const [purchase] = await this.db
-      .insert(schema.purchases)
-      .values({ bookId, userId })
-      .returning();
+      const [purchase] = await tx
+        .insert(schema.purchases)
+        .values({ bookId, userId })
+        .returning();
 
-    await this.db
-      .update(schema.books)
-      .set({ inStock: sql`${schema.books.inStock} - 1` })
-      .where(gt(schema.books.inStock, 1));
+      await tx
+        .update(schema.books)
+        .set({ inStock: sql`${schema.books.inStock} - 1` })
+        .where(gt(schema.books.inStock, 1));
 
-    return purchase;
+      return purchase;
+    });
   }
 
   async getUserBorrows(userId: string) {

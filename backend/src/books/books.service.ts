@@ -8,6 +8,8 @@ import { DRIZZLE } from '../db/db.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../db/schema';
 import { desc, eq, sql, count, gt } from 'drizzle-orm';
+import { CreateBookDto } from './dto/create-book.dto';
+import { UpdateBookDto } from './dto/update-book.dto';
 
 @Injectable()
 export class BooksService {
@@ -85,18 +87,7 @@ export class BooksService {
     return book.createdBy;
   }
 
-  async create(
-    data: {
-      title: string;
-      author: string;
-      price: string;
-      cover: string;
-      synopsis: string;
-      category: string;
-      trending?: boolean;
-    },
-    userId: string,
-  ) {
+  async create(data: CreateBookDto, userId: string) {
     const [book] = await this.db
       .insert(schema.books)
       .values({ ...data, createdBy: userId })
@@ -104,19 +95,7 @@ export class BooksService {
     return book;
   }
 
-  async update(
-    id: string,
-    data: Partial<{
-      title: string;
-      author: string;
-      price: string;
-      cover: string;
-      synopsis: string;
-      category: string;
-      trending: boolean;
-    }>,
-    userId: string,
-  ) {
+  async update(id: string, data: UpdateBookDto, userId: string) {
     const owner = await this.findOwner(id);
     if (owner !== userId) {
       throw new ForbiddenException('You can only edit your own books');

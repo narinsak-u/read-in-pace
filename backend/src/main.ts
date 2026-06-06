@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { auth } from './auth/better-auth';
 import { toNodeHandler } from 'better-auth/node';
@@ -12,8 +13,15 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Mount Better Auth middleware — handles /api/auth/sign-in, /api/auth/sign-up,
-  // /api/auth/sign-out, /api/auth/session and others
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+      transformOptions: { enableImplicitConversion: true },
+    }),
+  );
+
   const authHandler = toNodeHandler(auth);
   app.use('/api/auth', (req, res, next) => {
     authHandler(req, res).catch(next);

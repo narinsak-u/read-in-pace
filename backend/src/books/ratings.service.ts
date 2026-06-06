@@ -1,8 +1,9 @@
-import { Injectable, Inject, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE } from '../db/db.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../db/schema';
 import { eq, and, sql } from 'drizzle-orm';
+import { RateBookDto } from './dto/rate-book.dto';
 
 @Injectable()
 export class RatingsService {
@@ -21,12 +22,8 @@ export class RatingsService {
     return { userRating: row?.rating ?? null };
   }
 
-  async upsert(bookId: string, userId: string, rating: number) {
-    if (rating < 1 || rating > 5 || !Number.isInteger(rating)) {
-      throw new BadRequestException(
-        'Rating must be an integer between 1 and 5',
-      );
-    }
+  async upsert(bookId: string, userId: string, dto: RateBookDto) {
+    const { rating } = dto;
 
     await this.db
       .insert(schema.ratings)
