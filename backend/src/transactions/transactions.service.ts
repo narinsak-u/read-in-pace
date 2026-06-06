@@ -1,3 +1,6 @@
+// Business logic for borrowing, returning, and purchasing books.
+// Borrow uses a DB-level transaction with row locking (FOR UPDATE) for concurrency safety.
+// Purchase uses Stripe Checkout Sessions with payment confirmation and idempotency guard.
 import {
   Injectable,
   Inject,

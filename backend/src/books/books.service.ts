@@ -1,3 +1,6 @@
+// Business logic for books: CRUD, paginated listing, stock management, and trending.
+// Uses Drizzle ORM with computed subquery fields (likeCount, commentCount, avgRating).
+// Enforces ownership on update/delete. decrementStock is used by the purchase flow.
 import {
   Injectable,
   Inject,

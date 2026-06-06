@@ -1,3 +1,5 @@
+// REST controller for book likes at /api/books/:id/like (fully auth-guarded).
+// GET checks if the user liked the book; POST toggles the like on/off.
 import { Controller, Get, Post, Param, UseGuards } from '@nestjs/common';
 import { LikesService } from './likes.service';
 import { AuthGuard } from '../auth/auth.guard';

@@ -1,3 +1,5 @@
+// Business logic for book comments: list (with user join), create, and remove.
+// Enforces ownership on delete. Comments are returned newest-first.
 import {
   Injectable,
   Inject,

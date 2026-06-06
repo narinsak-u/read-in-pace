@@ -1,3 +1,4 @@
+// DTO for rating a book. Rating must be an integer between 1 and 5.
 import { IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 

@@ -1,3 +1,4 @@
+// DTO validated by class-validator for creating a new book. All fields required except trending.
 import {
   IsString,
   IsNumber,

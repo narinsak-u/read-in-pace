@@ -1,3 +1,6 @@
+// Better Auth server instance configured with Drizzle PostgreSQL adapter.
+// Provides email/password authentication and session management.
+// This is the single auth entry point consumed by guards, route handlers, and server API routes.
 import { betterAuth } from 'better-auth/minimal';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { Pool } from 'pg';

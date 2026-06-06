@@ -1,3 +1,5 @@
+// Registers books, likes, comments, and ratings controllers and services.
+// Exports BooksService and CommentsService for cross-module use (e.g. purchases, admin).
 import { Module } from '@nestjs/common';
 import { BooksController } from './books.controller';
 import { BooksService } from './books.service';

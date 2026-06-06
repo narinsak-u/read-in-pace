@@ -1,3 +1,5 @@
+// Business logic for ratings: check user's rating and upsert (insert or update) on conflict.
+// Uses ON CONFLICT DO UPDATE for idempotent rating submission. Returns new average after upsert.
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE } from '../db/db.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';

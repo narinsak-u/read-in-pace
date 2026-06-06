@@ -1,3 +1,6 @@
+// REST controller for books CRUD at /api/books.
+// Public endpoints: findAll (paginated, filterable by category), findOne, getTrending.
+// Auth-protected: create, update, delete (owner-only via CurrentUser).
 import {
   Controller,
   Get,

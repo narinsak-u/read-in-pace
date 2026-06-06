@@ -1,3 +1,4 @@
+// DTO for partial book updates. All fields optional — only provided fields are changed.
 import {
   IsString,
   IsNumber,

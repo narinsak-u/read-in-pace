@@ -1,3 +1,5 @@
+// Business logic for book likes: check if liked and toggle (add/remove) with count return.
+// Uses a single upsert-style pattern: delete if exists, insert if not.
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE } from '../db/db.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';

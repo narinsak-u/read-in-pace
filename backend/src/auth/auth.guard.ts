@@ -1,3 +1,6 @@
+// NestJS guard that validates requests via Better Auth session tokens.
+// Extracts the user session from incoming headers and attaches the user to the request.
+// Throws UnauthorizedException when no valid session exists.
 import {
   Injectable,
   CanActivate,

@@ -1,3 +1,5 @@
+// REST controller for book ratings at /api/books/:id/rate (fully auth-guarded).
+// GET checks the user's existing rating; POST creates or updates it (upsert).
 import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
 import { RatingsService } from './ratings.service';
 import { AuthGuard } from '../auth/auth.guard';

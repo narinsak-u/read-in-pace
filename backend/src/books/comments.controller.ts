@@ -1,3 +1,5 @@
+// REST controller for book comments at /api/books/:id/comments.
+// Public: list all comments for a book. Auth-protected: create and delete (owner-only).
 import {
   Controller,
   Get,
