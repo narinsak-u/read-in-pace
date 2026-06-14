@@ -2,19 +2,15 @@
 
 export default defineNuxtConfig({
   ssr: true,
-  devtools: true,
+  devtools: { enabled: true },
   css: ["~/assets/css/main.css"],
   modules: [
-   "@pinia/nuxt",
-   "shadcn-nuxt",
-   "@stefanobartoletti/nuxt-social-share",
-   "pinia-plugin-persistedstate/nuxt",
+    "@pinia/nuxt",
+    "shadcn-nuxt",
+    "@stefanobartoletti/nuxt-social-share",
   ],
-  piniaPluginPersistedstate: {
-    storage: "localStorage",
-  },
   socialShare: {
-    baseUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+    baseUrl: process.env.NUXT_PUBLIC_SITE_URL || "http://localhost:3000",
   },
   devServer: {
     port: 3000,
