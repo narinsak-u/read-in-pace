@@ -52,6 +52,7 @@ function navigate(path: string) {
         >
           <LayoutDashboard class="h-4 w-4" /> My Dashboard
         </NuxtLink>
+        <CartIcon class="ml-2" />
 
         <!-- Profile -->
         <div class="relative ml-2">

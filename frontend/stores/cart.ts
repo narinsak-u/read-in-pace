@@ -15,6 +15,7 @@ export const useCartStore = defineStore(
   'cart',
   () => {
     const items = shallowRef<CartItem[]>([]);
+    const drawerOpen = ref(false);
 
     const itemCount = computed(() => items.value.length);
     const subtotal = computed(() =>
@@ -28,6 +29,7 @@ export const useCartStore = defineStore(
         return;
       }
       items.value = [...items.value, book];
+      drawerOpen.value = true;
     }
 
     function removeItem(bookId: string) {
@@ -37,6 +39,10 @@ export const useCartStore = defineStore(
     function clear() {
       items.value = [];
     }
+
+    function openDrawer() { drawerOpen.value = true; }
+    function closeDrawer() { drawerOpen.value = false; }
+    function toggleDrawer() { drawerOpen.value = !drawerOpen.value; }
 
     async function checkout() {
       try {
@@ -61,10 +67,14 @@ export const useCartStore = defineStore(
       itemCount,
       subtotal,
       isEmpty,
+      drawerOpen: readonly(drawerOpen),
       addItem,
       removeItem,
       clear,
       checkout,
+      openDrawer,
+      closeDrawer,
+      toggleDrawer,
     };
   },
   {
