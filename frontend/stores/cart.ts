@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { shallowRef } from 'vue';
 import { toast } from 'vue-sonner';
 
 export interface CartItem {
@@ -14,7 +14,7 @@ export interface CartItem {
 export const useCartStore = defineStore(
   'cart',
   () => {
-    const items = ref<CartItem[]>([]);
+    const items = shallowRef<CartItem[]>([]);
 
     const itemCount = computed(() => items.value.length);
     const subtotal = computed(() =>
@@ -27,7 +27,7 @@ export const useCartStore = defineStore(
         toast.info('This book is already in your cart');
         return;
       }
-      items.value.push(book);
+      items.value = [...items.value, book];
     }
 
     function removeItem(bookId: string) {
@@ -44,7 +44,7 @@ export const useCartStore = defineStore(
           method: 'POST',
           body: { bookIds: items.value.map((i) => i.bookId) },
         });
-        window.location.href = res.url;
+        await navigateTo(res.url, { external: true });
       } catch (e: any) {
         if (e?.statusCode === 401) {
           toast.error('Please sign in to checkout');
@@ -57,7 +57,7 @@ export const useCartStore = defineStore(
     }
 
     return {
-      items,
+      items: readonly(items),
       itemCount,
       subtotal,
       isEmpty,
