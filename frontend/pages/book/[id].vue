@@ -33,7 +33,7 @@ definePageMeta({
         <!-- Left column: Book cover (sticky) -->
         <div class="flex justify-center md:sticky md:top-24">
           <div class="w-full max-w-md">
-            <div class="w-full overflow-hidden rounded-lg shadow-lg shadow-black/20">
+            <div class="w-full overflow-hidden rounded-lg border border-border/60 shadow-md">
               <img
                 :src="book.cover"
                 :alt="book.title"
