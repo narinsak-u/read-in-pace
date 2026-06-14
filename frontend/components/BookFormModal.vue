@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { X } from "lucide-vue-next";
-import { useBooksStore } from "~/stores/books";
+import { X } from 'lucide-vue-next';
+import { useBooksStore } from '~/stores/books';
 
 const props = withDefaults(
   defineProps<{
@@ -8,11 +8,11 @@ const props = withDefaults(
       id: string;
       title: string;
       author: string;
-      price: string;
+      price: number;
       cover: string;
       synopsis: string;
       category: string;
-      trending: boolean;
+      trending?: boolean;
     } | null;
   }>(),
   { book: null },
@@ -28,27 +28,27 @@ const saving = shallowRef(false);
 const error = shallowRef("");
 
 const form = reactive({
-  title: props.book?.title ?? "",
-  author: props.book?.author ?? "",
-  price: props.book?.price ?? "",
-  cover: props.book?.cover ?? "",
-  synopsis: props.book?.synopsis ?? "",
-  category: props.book?.category ?? "Fiction",
+  title: props.book?.title ?? '',
+  author: props.book?.author ?? '',
+  price: String(props.book?.price ?? ''),
+  cover: props.book?.cover ?? '',
+  synopsis: props.book?.synopsis ?? '',
+  category: props.book?.category ?? 'Fiction',
   trending: props.book?.trending ?? false,
 });
 
 async function handleSubmit() {
   saving.value = true;
-  error.value = "";
+  error.value = '';
   try {
     if (props.book) {
       await booksStore.updateBook(props.book.id, form);
     } else {
       await booksStore.createBook(form);
     }
-    emit("saved");
+    emit('saved');
   } catch (e: any) {
-    error.value = e?.message || "Something went wrong";
+    error.value = e?.message || 'Something went wrong';
   } finally {
     saving.value = false;
   }

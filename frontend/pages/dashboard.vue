@@ -1,39 +1,45 @@
 <script setup lang="ts">
-import { BookMarked, Library } from "lucide-vue-next";
-import { toast } from "vue-sonner";
-import { useAuthStore } from "~/stores/auth";
-import { useDashboardStore } from "~/stores/dashboard";
-import { useCartStore } from "~/stores/cart";
+import { BookMarked, Library } from 'lucide-vue-next';
+import { toast } from 'vue-sonner';
+import { useAuthStore } from '~/stores/auth';
+import { useDashboardStore } from '~/stores/dashboard';
+import { useCartStore } from '~/stores/cart';
+import type { BookWithMeta } from '~/stores/books';
 
 const auth = useAuthStore();
 const dashboard = useDashboardStore();
 const cartStore = useCartStore();
 const route = useRoute();
-const tab = shallowRef<"borrowed" | "purchased">(
-  (route.query.tab as "borrowed" | "purchased") || "borrowed",
+const tab = shallowRef<'borrowed' | 'purchased'>(
+  (route.query.tab as 'borrowed' | 'purchased') || 'borrowed',
 );
 
 const borrowedBooks = computed(() => dashboard.borrowed);
 const purchasedBooks = computed(() => dashboard.purchased);
 const list = computed(() =>
-  tab.value === "borrowed" ? dashboard.borrowed : dashboard.purchased,
+  tab.value === 'borrowed' ? dashboard.borrowed : dashboard.purchased,
 );
+
+function setTab(t: 'borrowed' | 'purchased') {
+  tab.value = t;
+  navigateTo({ query: { tab: t } }, { replace: true });
+}
 
 onMounted(async () => {
   if (route.query.session_id) {
     try {
       await dashboard.confirmPurchase(route.query.session_id as string);
       cartStore.clear();
-      toast.success("Purchase complete!");
+      toast.success('Purchase complete!');
     } catch {
-      toast.error("Purchase confirmation failed");
+      toast.error('Purchase confirmation failed');
     }
   }
   await Promise.all([dashboard.fetchBorrows(), dashboard.fetchPurchases()]);
 });
 
 definePageMeta({
-  title: "My Dashboard — Read in Pace",
+  title: 'My Dashboard — Read in Pace',
 });
 </script>
 
@@ -43,13 +49,13 @@ definePageMeta({
     <div class="mb-10">
       <p class="text-sm text-muted-foreground">Welcome back</p>
       <h1 class="mt-1 text-4xl font-semibold tracking-tight">
-        {{ auth.user?.name || "Reader" }}
+        {{ auth.user?.name || 'Reader' }}
       </h1>
     </div>
 
     <div class="mb-8 flex gap-6 border-b border-border/60">
       <button
-        @click="tab = 'borrowed'"
+        @click="setTab('borrowed')"
         class="flex items-center gap-2 pb-3 cursor-pointer text-sm font-medium transition-all duration-200 border-b-2 -mb-px"
         :class="
           tab === 'borrowed'
@@ -60,7 +66,7 @@ definePageMeta({
         <BookMarked class="h-4 w-4" /> Borrowed {{ borrowedBooks.length }}
       </button>
       <button
-        @click="tab = 'purchased'"
+        @click="setTab('purchased')"
         class="flex items-center gap-2 pb-3 cursor-pointer text-sm font-medium transition-all duration-200 border-b-2 -mb-px"
         :class="
           tab === 'purchased'
@@ -91,8 +97,8 @@ definePageMeta({
       >
         <BookCard
           v-for="item in list"
-          :key="item.borrow?.id || item.purchase?.id"
-          :book="item.book"
+          :key="'borrow' in item ? item.borrow.id : item.purchase.id"
+          :book="item.book as BookWithMeta"
           :variant="tab"
         />
       </div>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Plus } from "lucide-vue-next";
-import { useAuthStore } from "~/stores/auth";
-import { useBooksStore } from "~/stores/books";
+import { Plus } from 'lucide-vue-next';
+import { useAuthStore } from '~/stores/auth';
+import { useBooksStore } from '~/stores/books';
 
 const auth = useAuthStore();
 const booksStore = useBooksStore();

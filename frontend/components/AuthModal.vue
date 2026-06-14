@@ -6,7 +6,6 @@ const emit = defineEmits<{
 }>();
 
 const auth = useAuthStore();
-const router = useRouter();
 
 const tab = shallowRef<'sign-in' | 'sign-up'>('sign-in');
 const email = shallowRef('');
@@ -25,7 +24,6 @@ async function handleSubmit() {
       await auth.signUp(name.value, email.value, password.value);
     }
     emit('close');
-    router.push('/feed');
   } catch (err: any) {
     error.value = err?.data?.message || err?.message || 'Something went wrong';
   } finally {

@@ -3,7 +3,7 @@ import { Flame } from 'lucide-vue-next';
 import type { BookWithMeta } from '~/stores/books';
 
 defineProps<{
-  trending: BookWithMeta[];
+  trending: readonly BookWithMeta[];
 }>();
 </script>
 

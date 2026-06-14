@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Comment } from "~/stores/books";
+import type { Comment } from '~/stores/books';
 
 const props = defineProps<{
   comments: Comment[];

@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { Pencil, Trash2, RotateCcw, BookOpen } from "lucide-vue-next";
-import type { Book } from "~/data/books";
-import { useDashboardStore } from "~/stores/dashboard";
-import { useBooksStore } from "~/stores/books";
-import { useAuthStore } from "~/stores/auth";
-import { useCartStore } from "~/stores/cart";
+import { computed } from 'vue';
+import { Pencil, Trash2, RotateCcw, BookOpen } from 'lucide-vue-next';
+import type { BookWithMeta } from '~/stores/books';
+import { useDashboardStore } from '~/stores/dashboard';
+import { useBooksStore } from '~/stores/books';
+import { useAuthStore } from '~/stores/auth';
+import { useCartStore } from '~/stores/cart';
 
 const props = withDefaults(
   defineProps<{
-    book: Book;
-    variant?: "default" | "borrowed" | "purchased";
+    book: BookWithMeta;
+    variant?: 'default' | 'borrowed' | 'purchased';
   }>(),
-  { variant: "default" },
+  { variant: 'default' },
 );
 
 const emit = defineEmits<{
-  edit: [book: Book];
+  edit: [book: BookWithMeta];
 }>();
 
 const dashboard = useDashboardStore();

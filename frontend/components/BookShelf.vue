@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import type { BookWithMeta } from '~/stores/books';
 
 const props = defineProps<{
-  books: BookWithMeta[];
+  books: readonly BookWithMeta[];
   categories: string[];
   activeCategory: string;
   page: number;

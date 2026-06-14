@@ -10,13 +10,8 @@ export function useShelf() {
 
   const totalPages = computed(() => booksStore.meta.totalPages);
 
-  watch([page, activeCategory], async ([p, cat], _prev, onCleanup) => {
-    let cancelled = false;
-    onCleanup(() => { cancelled = true; });
-
+  watch([page, activeCategory], async ([p, cat]) => {
     await booksStore.fetchBooks(p, 12, cat === 'All' ? undefined : cat);
-
-    if (cancelled) return;
   });
 
   onMounted(async () => {

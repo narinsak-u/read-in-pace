@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { ShoppingBag, X } from 'lucide-vue-next';
 import { useCartStore } from '~/stores/cart';
-import { computeDiscount } from '~/composables/useDiscount';
+import { computeDiscount } from '~/utils/discount';
 
 const cartStore = useCartStore();
 const breakdown = computed(() => computeDiscount(cartStore.items));

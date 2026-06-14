@@ -62,20 +62,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
     }
   }
 
-  async function buyBook(id: string) {
-    try {
-      const res = await $fetch<{ url: string }>(
-        `/api/books/${id}/create-checkout-session`,
-        { method: 'POST' },
-      );
-      window.location.href = res.url;
-    } catch (e: any) {
-      if (e?.statusCode === 401) toast.error('Please sign in to buy a book');
-      else toast.error(e?.message || 'Failed to start checkout');
-      throw e;
-    }
-  }
-
   async function confirmPurchase(sessionId: string) {
     await $fetch(`/api/confirm-purchase?session_id=${sessionId}`, {
       method: 'POST',
@@ -90,7 +76,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
     fetchPurchases,
     borrowBook,
     returnBook,
-    buyBook,
     confirmPurchase,
   };
 });

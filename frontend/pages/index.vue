@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowRight } from "lucide-vue-next";
+import { ArrowRight } from 'lucide-vue-next';
 
 definePageMeta({
   title: "Read in Pace — A calmer way to read",

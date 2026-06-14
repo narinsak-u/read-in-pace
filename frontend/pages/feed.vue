@@ -7,6 +7,9 @@ const auth = useAuthStore();
 
 const { page, activeCategory, categories, totalPages, setPage, setCategory } = useShelf();
 
+const booksList = computed(() => [...booksStore.books]);
+const trendingList = computed(() => [...booksStore.trending]);
+
 function handleEdit(book: import('~/stores/books').BookWithMeta) {
   booksStore.openEditForm(book);
 }
@@ -30,10 +33,10 @@ definePageMeta({
 <template>
   <Navbar />
   <main class="mx-auto max-w-5xl px-6 md:px-0 py-10">
-    <TrendingSection :trending="booksStore.trending" />
+    <TrendingSection :trending="trendingList" />
 
     <BookShelf
-      :books="booksStore.books"
+      :books="booksList"
       :categories="categories"
       :active-category="activeCategory"
       :page="page"

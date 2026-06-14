@@ -1,4 +1,4 @@
-import { ref, shallowRef, onMounted } from 'vue';
+import { shallowRef, onMounted } from 'vue';
 import { toast } from 'vue-sonner';
 import { useBooksStore } from '~/stores/books';
 import { useDashboardStore } from '~/stores/dashboard';
@@ -9,8 +9,8 @@ export function useBookDetail(id: string) {
   const dashboard = useDashboardStore();
   const auth = useAuthStore();
 
-  const book = ref<import('~/stores/books').BookWithMeta | null>(null);
-  const comments = ref<import('~/stores/books').Comment[]>([]);
+  const book = shallowRef<import('~/stores/books').BookWithMeta | null>(null);
+  const comments = shallowRef<import('~/stores/books').Comment[]>([]);
   const hasBorrowed = shallowRef(false);
 
   onMounted(async () => {

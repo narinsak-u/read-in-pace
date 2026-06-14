@@ -5,20 +5,32 @@ import {
   User,
   LogOut,
   Shield,
-} from "lucide-vue-next";
-import { computed } from "vue";
-import { useAuthStore } from "~/stores/auth";
+} from 'lucide-vue-next';
+import { computed } from 'vue';
+import { useAuthStore } from '~/stores/auth';
 
 const auth = useAuthStore();
 const open = shallowRef(false);
+const dropdownRef = shallowRef<HTMLElement | null>(null);
+const buttonRef = shallowRef<HTMLElement | null>(null);
 const router = useRouter();
 
+function onClickOutside(e: MouseEvent) {
+  if (!open.value) return;
+  const target = e.target as Node;
+  if (dropdownRef.value?.contains(target) || buttonRef.value?.contains(target)) return;
+  open.value = false;
+}
+
+onMounted(() => document.addEventListener('click', onClickOutside));
+onUnmounted(() => document.removeEventListener('click', onClickOutside));
+
 const userInitials = computed(() => {
-  if (!auth.user) return "";
+  if (!auth.user) return '';
   return auth.user.name
-    .split(" ")
+    .split(' ')
     .map((n: string) => n[0])
-    .join("");
+    .join('');
 });
 
 function navigate(path: string) {
@@ -56,8 +68,8 @@ function navigate(path: string) {
         <!-- Profile -->
         <div class="relative ml-2">
           <button
+            ref="buttonRef"
             @click="open = !open"
-            @blur="setTimeout(() => (open = false), 150)"
             class="flex h-9 w-9 items-center cursor-pointer justify-center rounded-full bg-primary/10 text-primary ring-1 ring-border transition-all duration-200 hover:scale-105 hover:ring-primary/30"
             aria-label="Profile menu"
           >
@@ -68,6 +80,7 @@ function navigate(path: string) {
           </button>
           <div
             v-if="open"
+            ref="dropdownRef"
             class="absolute right-0 mt-2 w-60 origin-top-right rounded-xl border border-border bg-card p-2 shadow-md"
           >
             <template v-if="auth.signedIn">

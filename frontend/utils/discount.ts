@@ -1,21 +1,21 @@
 import type { CartItem } from '~/stores/cart';
 
 export interface DiscountBreakdown {
-  subtotal: number;        // cents
+  subtotal: number;
   tierPercent: number;
-  tierDiscount: number;    // cents
-  categoryBonus: number;   // cents
-  every100Discount: number; // cents
-  total: number;           // cents
+  tierDiscount: number;
+  categoryBonus: number;
+  every100Discount: number;
+  total: number;
 }
 
 interface CategorySubtotal {
   category: string;
-  subtotal: number;        // cents
+  subtotal: number;
   count: number;
 }
 
-function getCategorySubtotals(items: CartItem[]): CategorySubtotal[] {
+function getCategorySubtotals(items: readonly CartItem[]): CategorySubtotal[] {
   const map = new Map<string, { subtotal: number; count: number }>();
   for (const item of items) {
     const existing = map.get(item.category) ?? { subtotal: 0, count: 0 };
@@ -30,16 +30,14 @@ function getCategorySubtotals(items: CartItem[]): CategorySubtotal[] {
   }));
 }
 
-export function computeDiscount(items: CartItem[]): DiscountBreakdown {
+export function computeDiscount(items: readonly CartItem[]): DiscountBreakdown {
   const subtotal = items.reduce((sum, i) => sum + Math.round(i.price * 100), 0);
 
-  // Stage 1 — Quantity Tier
   const count = items.length;
   const tierPercent = count >= 4 ? 30 : count === 3 ? 20 : count === 2 ? 10 : 0;
   const tierDiscount = Math.round(subtotal * (tierPercent / 100));
   let runningTotal = subtotal - tierDiscount;
 
-  // Stage 2 — Category Bonus (on original category subtotals)
   const catSubtotals = getCategorySubtotals(items);
   const categoryBonus = catSubtotals.reduce((sum, cat) => {
     if (cat.count >= 2) {
@@ -49,7 +47,6 @@ export function computeDiscount(items: CartItem[]): DiscountBreakdown {
   }, 0);
   runningTotal -= categoryBonus;
 
-  // Stage 3 — Every $100 (10000 cents)
   const every100Discount = Math.floor(runningTotal / 10000) * 100;
   runningTotal -= every100Discount;
 
