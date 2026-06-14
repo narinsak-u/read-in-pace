@@ -42,7 +42,7 @@ function getInitials(name: string): string {
       <div class="flex justify-end">
         <button
           type="submit"
-          class="rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
+          class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-all duration-200 hover:translate-y-[-1px]"
         >
           Post comment
         </button>
@@ -50,18 +50,20 @@ function getInitials(name: string): string {
     </form>
 
     <div class="mt-8 space-y-6">
-      <div v-for="c in comments" :key="c.id" class="flex gap-4">
-        <div
-          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
-        >
-          {{ getInitials(c.user.name) }}
-        </div>
-        <div class="flex-1">
-          <div class="flex items-center gap-2">
-            <p class="font-medium">{{ c.user.name }}</p>
-            <span class="text-xs text-muted-foreground">{{ new Date(c.createdAt).toLocaleDateString() }}</span>
+      <div v-for="c in comments" :key="c.id" class="rounded-lg border border-border/60 bg-card p-4 shadow-sm">
+        <div class="flex gap-4">
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-semibold text-primary"
+          >
+            {{ getInitials(c.user.name) }}
           </div>
-          <p class="mt-1 text-sm text-muted-foreground">{{ c.text }}</p>
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <p class="font-medium">{{ c.user.name }}</p>
+              <span class="text-xs text-muted-foreground">{{ new Date(c.createdAt).toLocaleDateString() }}</span>
+            </div>
+            <p class="mt-1 text-sm text-muted-foreground">{{ c.text }}</p>
+          </div>
         </div>
       </div>
     </div>
