@@ -58,7 +58,7 @@ function navigate(path: string) {
           <button
             @click="open = !open"
             @blur="setTimeout(() => (open = false), 150)"
-            class="flex h-9 w-9 items-center cursor-pointer justify-center rounded-full bg-primary/10 text-primary ring-1 ring-border transition-transform hover:scale-105"
+            class="flex h-9 w-9 items-center cursor-pointer justify-center rounded-full bg-primary/10 text-primary ring-1 ring-border transition-all duration-200 hover:scale-105 hover:ring-primary/30"
             aria-label="Profile menu"
           >
             <span v-if="auth.signedIn && auth.user" class="text-sm font-semibold">
@@ -68,7 +68,7 @@ function navigate(path: string) {
           </button>
           <div
             v-if="open"
-            class="absolute right-0 mt-2 w-60 origin-top-right rounded-xl border border-border bg-popover p-2 shadow-lg"
+            class="absolute right-0 mt-2 w-60 origin-top-right rounded-xl border border-border bg-card p-2 shadow-md"
           >
             <template v-if="auth.signedIn">
               <div class="px-3 py-2">
