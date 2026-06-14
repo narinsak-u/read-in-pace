@@ -3,9 +3,11 @@ import { BookMarked, Library } from "lucide-vue-next";
 import { toast } from "vue-sonner";
 import { useAuthStore } from "~/stores/auth";
 import { useDashboardStore } from "~/stores/dashboard";
+import { useCartStore } from "~/stores/cart";
 
 const auth = useAuthStore();
 const dashboard = useDashboardStore();
+const cartStore = useCartStore();
 const route = useRoute();
 const tab = shallowRef<"borrowed" | "purchased">(
   (route.query.tab as "borrowed" | "purchased") || "borrowed",
@@ -21,6 +23,7 @@ onMounted(async () => {
   if (route.query.session_id) {
     try {
       await dashboard.confirmPurchase(route.query.session_id as string);
+      cartStore.clear();
       toast.success("Purchase complete!");
     } catch {
       toast.error("Purchase confirmation failed");
