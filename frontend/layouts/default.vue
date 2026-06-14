@@ -19,6 +19,7 @@ const booksStore = useBooksStore();
       @close="booksStore.closeForm()"
       @saved="booksStore.closeForm()"
     />
+    <CheckoutDrawer v-if="route.name !== 'index'" />
     <Toaster richColors position="top-center" />
   </div>
 </template>
