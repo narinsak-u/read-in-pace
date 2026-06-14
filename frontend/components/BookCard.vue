@@ -5,6 +5,7 @@ import type { Book } from "~/data/books";
 import { useDashboardStore } from "~/stores/dashboard";
 import { useBooksStore } from "~/stores/books";
 import { useAuthStore } from "~/stores/auth";
+import { useCartStore } from "~/stores/cart";
 
 const props = withDefaults(
   defineProps<{
@@ -21,6 +22,7 @@ const emit = defineEmits<{
 const dashboard = useDashboardStore();
 const booksStore = useBooksStore();
 const auth = useAuthStore();
+const cartStore = useCartStore();
 
 const formattedPrice = computed(() => Number(props.book.price).toFixed(2));
 
@@ -41,6 +43,17 @@ const stockClass = computed(() => {
 const stockLabel = computed(() => {
   return props.book.inStock >= 1 ? `In stock: ${props.book.inStock}` : "Out of stock";
 });
+
+function handleBuy() {
+  cartStore.addItem({
+    bookId: props.book.id,
+    title: props.book.title,
+    author: props.book.author,
+    cover: props.book.cover,
+    price: Number(props.book.price),
+    category: props.book.category,
+  });
+}
 
 async function handleDelete() {
   if (confirm("Delete this book?")) {
@@ -116,7 +129,7 @@ async function handleDelete() {
         <template v-else>
           <button
             v-if="book.inStock > 1"
-            @click="dashboard.buyBook(book.id)"
+            @click="handleBuy()"
             class="flex-1 rounded-lg bg-primary cursor-pointer px-3 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
             Buy ${{ formattedPrice }}

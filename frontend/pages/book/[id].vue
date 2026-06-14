@@ -6,7 +6,7 @@ import { useAuthStore } from '~/stores/auth';
 const route = useRoute();
 const id = route.params.id as string;
 
-const { book, comments, hasBorrowed, handleLike, handleRate, handleBuy, handleBorrow, submitReview } = useBookDetail(id);
+const { book, comments, hasBorrowed, handleLike, handleRate, handleBorrow, submitReview } = useBookDetail(id);
 
 const booksStore = useBooksStore();
 const auth = useAuthStore();
@@ -47,7 +47,7 @@ definePageMeta({
         <div class="flex flex-col">
           <BookDetails :book="book" />
 
-          <BookActions :book="book" :has-borrowed="hasBorrowed" @buy="handleBuy" @borrow="handleBorrow" />
+          <BookActions :book="book" :has-borrowed="hasBorrowed" @borrow="handleBorrow" />
 
           <div class="mt-6 flex items-center gap-2">
             <button
