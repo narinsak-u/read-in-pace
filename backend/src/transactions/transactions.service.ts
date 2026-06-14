@@ -213,6 +213,51 @@ export class TransactionsService {
     return { url: session.url };
   }
 
+  async createCartCheckoutSession(bookIds: string[], userId: string) {
+    if (!bookIds || bookIds.length === 0) {
+      throw new BadRequestException('Cart is empty');
+    }
+
+    const books = await Promise.all(
+      bookIds.map((id) => this.getBook(id)),
+    );
+
+    const badBooks = books.filter((b) => b.inStock <= 1);
+    if (badBooks.length > 0) {
+      throw new BadRequestException(
+        `Some books are no longer available for purchase: ${badBooks.map((b) => b.title).join(', ')}`,
+      );
+    }
+
+    const discount = applyDiscounts(
+      books.map((b) => ({ price: b.price, category: b.category })),
+    );
+
+    const session = await this.stripe.checkout.sessions.create({
+      mode: 'payment',
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `Read in Pace — ${bookIds.length} book${bookIds.length > 1 ? 's' : ''}`,
+            },
+            unit_amount: discount.total,
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        bookIds: JSON.stringify(bookIds),
+        userId,
+      },
+      success_url: `${process.env.BETTER_AUTH_URL || 'http://localhost:3000'}/dashboard?tab=purchased&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.BETTER_AUTH_URL || 'http://localhost:3000'}/feed`,
+    });
+
+    return { url: session.url };
+  }
+
   async confirmPurchase(sessionId: string, userId: string) {
     const session = await this.stripe.checkout.sessions.retrieve(sessionId);
     if (
@@ -222,8 +267,20 @@ export class TransactionsService {
       throw new BadRequestException('Invalid purchase confirmation');
     }
 
-    const bookId = session.metadata!.bookId;
+    const bookIdsRaw = session.metadata!.bookIds;
+    if (!bookIdsRaw) {
+      const bookId = session.metadata!.bookId;
+      if (!bookId) {
+        throw new BadRequestException('No book IDs found in session metadata');
+      }
+      return this.recordSinglePurchase(bookId, userId);
+    }
 
+    const bookIds: string[] = JSON.parse(bookIdsRaw);
+    return this.recordBatchPurchases(bookIds, userId);
+  }
+
+  private async recordSinglePurchase(bookId: string, userId: string) {
     return this.db.transaction(async (tx) => {
       const [existing] = await tx
         .select({ id: schema.purchases.id })
@@ -248,6 +305,42 @@ export class TransactionsService {
         .where(gt(schema.books.inStock, 1));
 
       return purchase;
+    });
+  }
+
+  private async recordBatchPurchases(bookIds: string[], userId: string) {
+    return this.db.transaction(async (tx) => {
+      const inserts: Promise<any>[] = [];
+      for (const bookId of bookIds) {
+        const [existing] = await tx
+          .select({ id: schema.purchases.id })
+          .from(schema.purchases)
+          .where(
+            and(
+              eq(schema.purchases.bookId, bookId),
+              eq(schema.purchases.userId, userId),
+            ),
+          );
+
+        if (existing) continue;
+
+        inserts.push(
+          tx
+            .insert(schema.purchases)
+            .values({ bookId, userId })
+            .returning(),
+        );
+      }
+
+      for (const bookId of bookIds) {
+        await tx
+          .update(schema.books)
+          .set({ inStock: sql`${schema.books.inStock} - 1` })
+          .where(gt(schema.books.inStock, 1));
+      }
+
+      const results = await Promise.all(inserts);
+      return results.flat();
     });
   }
 
