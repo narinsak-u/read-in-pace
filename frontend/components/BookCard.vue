@@ -26,7 +26,7 @@ const formattedPrice = computed(() => Number(props.book.price).toFixed(2));
 
 const borrowBtnClass = computed(() => {
   return props.book.isAvailable && props.book.inStock >= 1
-    ? "cursor-pointer border-border hover:bg-muted"
+    ? "cursor-pointer border-primary/30 text-primary hover:bg-primary-soft hover:border-primary"
     : "cursor-not-allowed border-dashed border-muted-foreground/30 text-muted-foreground/50";
 });
 
@@ -35,7 +35,7 @@ const borrowLabel = computed(() => {
 });
 
 const stockClass = computed(() => {
-  return props.book.inStock >= 1 ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-500";
+  return props.book.inStock >= 1 ? "bg-primary-soft text-primary" : "bg-red-500/10 text-red-500";
 });
 
 const stockLabel = computed(() => {
@@ -51,7 +51,7 @@ async function handleDelete() {
 
 <template>
   <div
-    class="group relative flex flex-col overflow-hidden rounded-lg border border-border bg-card transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5"
+    class="group relative flex flex-col overflow-hidden rounded-lg border border-border/60 bg-card shadow-sm transition-all duration-200 hover:shadow-md"
   >
     <div
       v-if="auth.adminMode"
@@ -101,7 +101,7 @@ async function handleDelete() {
         <template v-if="variant === 'borrowed'">
           <button
             @click="dashboard.returnBook(book.id)"
-            class="flex w-full items-center cursor-pointer justify-center gap-2 rounded-lg bg-foreground px-3 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
+            class="flex w-full items-center cursor-pointer justify-center gap-2 rounded-lg border border-primary/30 px-3 py-2 text-sm font-medium text-primary transition-all duration-200 hover:bg-primary-soft"
           >
             <RotateCcw class="h-4 w-4" /> Return Book
           </button>
@@ -124,7 +124,7 @@ async function handleDelete() {
           <button
             @click="dashboard.borrowBook(book.id)"
             :disabled="!book.isAvailable || book.inStock < 1"
-            class="flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors"
+            class="flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-200"
             :class="borrowBtnClass"
           >
             {{ borrowLabel }}
