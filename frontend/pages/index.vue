@@ -10,13 +10,22 @@ definePageMeta({
 
 <template>
   <div
-    class="relative flex h-screen w-full items-center justify-center overflow-hidden bg-animated-gradient"
+    class="relative flex h-screen w-full items-center justify-center overflow-hidden"
   >
+    <video
+      autoplay
+      loop
+      muted
+      playsinline
+      class="absolute inset-0 h-full w-full object-cover"
+    >
+      <source src="~/assets/background/landing-bg.mp4" type="video/mp4" />
+    </video>
     <div
       class="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-background/20"
     />
     <div
-      class="relative z-10 flex max-w-2xl flex-col items-center px-6 text-center"
+      class="relative z-10 flex max-w-5xl flex-col items-center px-6 text-center"
     >
       <span
         class="mb-6 rounded-full glass px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-foreground/70"
@@ -28,9 +37,7 @@ definePageMeta({
       >
         Read at the pace<br />the book deserves.
       </h1>
-      <p
-        class="mt-6 max-w-md text-balance text-base text-foreground/60 sm:text-lg"
-      >
+      <p class="mt-6 max-w-xl text-balance text-base text-white sm:text-lg">
         Borrow, return, review, and own — without the noise. A place built for
         slow afternoons and long evenings.
       </p>
