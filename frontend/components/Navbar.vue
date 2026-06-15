@@ -70,7 +70,7 @@ function navigate(path: string) {
           <button
             ref="buttonRef"
             @click="open = !open"
-            class="flex h-9 w-9 items-center cursor-pointer justify-center rounded-full bg-primary/10 text-primary ring-1 ring-border transition-all duration-200 hover:scale-105 hover:ring-primary/30"
+            class="flex h-9 w-9 items-center cursor-pointer justify-center rounded-sm bg-transparent text-muted-foreground transition-colors hover:text-primary"
             aria-label="Profile menu"
           >
             <span v-if="auth.signedIn && auth.user" class="text-sm font-semibold">
@@ -89,46 +89,45 @@ function navigate(path: string) {
                 <p class="text-xs text-muted-foreground">{{ auth.user?.email }}</p>
               </div>
               <div class="my-1 h-px bg-border" />
-              <button
+              <Button
+                variant="archivalGhost"
+                class="w-full justify-start"
                 @mousedown="navigate('/dashboard')"
-                class="flex w-full items-center cursor-pointer gap-2 rounded-lg px-3 py-2 text-sm hover:bg-muted"
               >
                 <LayoutDashboard class="h-4 w-4" /> Dashboard
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="archivalGhost"
+                class="w-full justify-between"
                 @mousedown="auth.toggleAdmin()"
-                class="flex w-full items-center cursor-pointer justify-between rounded-lg px-3 py-2 text-sm hover:bg-muted"
               >
-                <span class="flex items-center gap-2"
-                  >
-                    <Shield class="h-4 w-4" /> Admin mode</span
-                >
+                <span class="flex items-center gap-2"><Shield class="h-4 w-4" /> Admin mode</span>
                 <span
                   class="relative h-4 w-7 rounded-full transition-colors"
-                  :class="
-                    auth.adminMode ? 'bg-primary' : 'bg-muted-foreground/30'
-                  "
+                  :class="auth.adminMode ? 'bg-primary' : 'bg-muted-foreground/30'"
                 >
                   <span
                     class="absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all"
                     :class="auth.adminMode ? 'left-3.5' : 'left-0.5'"
                   />
                 </span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="archivalGhost"
+                class="w-full justify-start text-destructive"
                 @mousedown="auth.signOut()"
-                class="flex w-full items-center cursor-pointer gap-2 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-muted"
               >
                 <LogOut class="h-4 w-4" /> Sign out
-              </button>
+              </Button>
             </template>
             <template v-else>
-              <button
+              <Button
+                variant="archivalGhost"
+                class="w-full justify-start"
                 @mousedown="auth.openAuthModal()"
-                class="flex w-full items-center gap-2 cursor-pointer rounded-lg px-3 py-2 text-sm hover:bg-muted"
               >
                 Sign in
-              </button>
+              </Button>
             </template>
           </div>
         </div>

@@ -23,13 +23,13 @@ const emit = defineEmits<{
   <section>
     <div class="mb-5 flex items-end justify-between">
       <h2 class="text-2xl font-semibold tracking-tight">Full shelf</h2>
-      <button
+      <Button
         v-if="adminMode"
+        variant="archivalGhost"
         @click="emit('addBook')"
-        class="rounded-lg bg-foreground cursor-pointer px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
       >
         + New Book
-      </button>
+      </Button>
     </div>
 
     <div class="mb-6 flex flex-wrap gap-2">

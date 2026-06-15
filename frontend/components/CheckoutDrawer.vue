@@ -33,12 +33,13 @@ function formatPrice(amount: number): string {
                 ({{ cartStore.itemCount }} {{ cartStore.itemCount === 1 ? 'item' : 'items' }})
               </span>
             </h2>
-            <button
+            <Button
+              variant="archivalGhost"
+              size="icon"
               @click="cartStore.closeDrawer()"
-              class="flex h-8 w-8 items-center justify-center rounded-lg cursor-pointer hover:bg-muted transition-colors"
             >
               <X class="h-4 w-4" />
-            </button>
+            </Button>
           </div>
 
           <!-- Empty state -->
@@ -81,12 +82,13 @@ function formatPrice(amount: number): string {
                   <p class="text-xs text-muted-foreground">{{ item.category }}</p>
                   <div class="flex items-center justify-between mt-1.5">
                     <span class="text-sm font-semibold">{{ formatPrice(item.price) }}</span>
-                    <button
+                    <Button
+                      variant="archivalGhost"
+                      size="sm"
                       @click="cartStore.removeItem(item.bookId)"
-                      class="text-xs text-destructive/80 hover:text-destructive cursor-pointer transition-colors"
                     >
                       Remove
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -123,12 +125,13 @@ function formatPrice(amount: number): string {
 
             <!-- Checkout button -->
             <div class="p-4">
-              <button
+              <Button
+                variant="archival"
+                class="w-full py-3"
                 @click="cartStore.checkout()"
-                class="w-full rounded-lg bg-primary py-3 font-medium text-primary-foreground cursor-pointer transition-all duration-200 hover:translate-y-[-1px] hover:shadow-md"
               >
                 Proceed to Checkout — {{ formatPrice(breakdown.total) }}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

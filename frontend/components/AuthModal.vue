@@ -111,13 +111,14 @@ function switchTab(t: 'sign-in' | 'sign-up') {
       </div>
 
       <!-- Submit -->
-      <button
-        @click="handleSubmit"
+      <Button
+        variant="archival"
+        class="w-full"
         :disabled="submitting"
-        class="w-full rounded-lg bg-primary px-4 py-2 cursor-pointer text-sm font-semibold text-primary-foreground transition-all duration-200 hover:translate-y-[-1px] hover:shadow-md disabled:opacity-50"
+        @click="handleSubmit"
       >
         {{ submitting ? 'Please wait...' : tab === 'sign-in' ? 'Sign in' : 'Create account' }}
-      </button>
+      </Button>
 
       <!-- Switch tab -->
       <p class="mt-4 text-center text-sm text-muted-foreground">

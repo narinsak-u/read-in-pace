@@ -115,20 +115,20 @@ async function handleSubmit() {
           <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
 
           <div class="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
+            <Button
+              variant="archivalGhost"
               @click="emit('close')"
-              class="rounded-lg border cursor-pointer border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="archival"
               type="submit"
               :disabled="saving"
-              class="rounded-lg bg-primary cursor-pointer px-4 py-2 text-sm font-medium text-primary-foreground transition-all duration-200 hover:translate-y-[-1px] disabled:opacity-50"
+              @click="handleSubmit"
             >
-              {{ saving ? "Saving" : book ? "Save Changes" : "Create Book" }}
-            </button>
+              {{ saving ? "Saving" : props.book ? "Save Changes" : "Create Book" }}
+            </Button>
           </div>
         </form>
       </div>

@@ -14,20 +14,11 @@ const emit = defineEmits<{
 
 const cartStore = useCartStore();
 
-const borrowBtnClass = computed(() => {
-  const canBorrow = props.book.isAvailable && props.book.inStock >= 1 && !props.hasBorrowed;
-  return canBorrow
-    ? 'cursor-pointer border-primary/30 text-primary hover:bg-primary-soft hover:border-primary'
-    : 'cursor-not-allowed border-dashed border-muted-foreground/30 text-muted-foreground/50';
-});
-
 const borrowLabel = computed(() => {
   return props.book.isAvailable && props.book.inStock >= 1 && !props.hasBorrowed
     ? 'Borrow'
     : 'Unavailable';
 });
-
-const buyFullWidth = computed(() => props.book.inStock <= 1);
 
 function handleBuy() {
   cartStore.addItem({
@@ -44,20 +35,21 @@ function handleBuy() {
 
 <template>
   <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-    <button
+    <Button
       v-if="book.inStock > 1"
+      variant="archival"
+      class="flex-1"
       @click="handleBuy"
-      class="flex-1 rounded-lg bg-primary cursor-pointer px-6 py-3.5 font-medium text-primary-foreground transition-all duration-200 hover:translate-y-[-1px] hover:shadow-md"
     >
       Buy Now — ${{ Number(book.price).toFixed(2) }}
-    </button>
-    <button
-      @click="emit('borrow')"
+    </Button>
+    <Button
+      variant="archivalOutline"
+      class="flex-1"
       :disabled="!book.isAvailable || book.inStock < 1 || hasBorrowed"
-      class="flex-1 rounded-lg border px-6 py-3.5 font-medium transition-colors"
-      :class="[buyFullWidth ? 'w-full' : '', borrowBtnClass]"
+      @click="emit('borrow')"
     >
       {{ borrowLabel }}
-    </button>
+    </Button>
   </div>
 </template>
