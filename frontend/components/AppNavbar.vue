@@ -6,8 +6,10 @@ import {
   Search,
 } from 'lucide-vue-next';
 import { useAuthStore } from '~/stores/auth';
+import { useSearch } from '~/composables/useSearch';
 
 const auth = useAuthStore();
+const search = useSearch();
 const open = shallowRef(false);
 const dropdownRef = shallowRef<HTMLElement | null>(null);
 const buttonRef = shallowRef<HTMLElement | null>(null);
@@ -85,6 +87,7 @@ const isActive = (path: string): boolean => route.path.startsWith(path);
         <span class="sr-only">Search books</span>
         <Search class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
         <input
+          v-model="search.query"
           placeholder="Search titles, authors..."
           class="w-56 rounded-sm border-0 bg-input py-2 pl-9 pr-3 text-sm placeholder-muted-foreground focus:ring-1 focus:ring-ring lg:w-64"
         />
