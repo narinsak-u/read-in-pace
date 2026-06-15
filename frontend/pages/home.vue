@@ -2,12 +2,15 @@
 import { useDashboardStore } from '~/stores/dashboard';
 import { useBooksStore } from '~/stores/books';
 import { useCartStore } from '~/stores/cart';
+import { useSocialStore } from '~/stores/social';
 import { useSearch } from '~/composables/useSearch';
 import type { BookWithMeta } from '~/stores/books';
 
 const dashboard = useDashboardStore();
 const booksStore = useBooksStore();
 const cartStore = useCartStore();
+const socialStore = useSocialStore();
+const socialPosts = computed(() => socialStore.posts);
 const search = useSearch();
 const notice = shallowRef('');
 
@@ -66,6 +69,7 @@ function dueDateLabel(dueAt: string): { label: string; overdue: boolean } {
 
 onMounted(async () => {
   await Promise.all([dashboard.fetchBorrows(), booksStore.fetchNewArrivals()]);
+  socialStore.fetchFeed();
 });
 </script>
 
@@ -75,6 +79,9 @@ onMounted(async () => {
       <AppSidebar>
         <template #yearly-progress>
           <YearlyProgressCard />
+        </template>
+        <template #reader-feed>
+          <CompactFeedPosts :posts="socialPosts.slice(0, 3)" />
         </template>
       </AppSidebar>
     </template>
