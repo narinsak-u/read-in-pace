@@ -110,6 +110,7 @@ export class TransactionsService {
           id: schema.books.id,
           isAvailable: schema.books.isAvailable,
           inStock: schema.books.inStock,
+          totalPages: schema.books.totalPages,
         })
         .from(schema.books)
         .where(eq(schema.books.id, bookId))
@@ -148,7 +149,13 @@ export class TransactionsService {
 
       const [borrow] = await tx
         .insert(schema.borrows)
-        .values({ bookId, userId })
+        .values({
+          bookId,
+          userId,
+          dueAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+          currentPage: 0,
+          totalPages: book.totalPages,
+        })
         .returning();
 
       return borrow;

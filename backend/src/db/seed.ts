@@ -169,6 +169,8 @@ async function seed() {
 
   const bookIds = Array.from({ length: 15 }, () => crypto.randomUUID());
   const stockValues = [5, 3, 10, 9, 1, 8, 4, 7, 10, 3, 1, 5, 2, 0, 10];
+  const totalPagesValues = [340, 280, 420, 310, 256, 380, 440, 290, 360, 200, 320, 400, 270, 350, 190];
+
   const booksData = titles.map(([title, author], i) => ({
     id: bookIds[i],
     title,
@@ -180,6 +182,7 @@ async function seed() {
     trending: i < 3,
     inStock: stockValues[i],
     isAvailable: true,
+    totalPages: totalPagesValues[i],
     createdBy: '00000000-0000-0000-0000-000000000001',
   }));
 
