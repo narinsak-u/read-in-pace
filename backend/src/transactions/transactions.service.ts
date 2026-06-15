@@ -360,6 +360,9 @@ export class TransactionsService {
           userId: schema.borrows.userId,
           borrowedAt: schema.borrows.borrowedAt,
           returnedAt: schema.borrows.returnedAt,
+          dueAt: schema.borrows.dueAt,
+          currentPage: schema.borrows.currentPage,
+          totalPages: schema.borrows.totalPages,
         },
         book: {
           id: schema.books.id,
