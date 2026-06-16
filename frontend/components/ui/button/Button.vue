@@ -13,7 +13,7 @@ const buttonVariants = cva(
         archivalGhost:
           'rounded-sm bg-transparent text-muted-foreground shadow-none hover:text-primary',
         archivalDock:
-          'h-auto flex-col gap-0.5 rounded-none bg-transparent p-0 text-background shadow-none hover:text-primary',
+          'h-auto flex-col gap-2 rounded-none bg-transparent p-2! text-background shadow-none hover:text-primary',
         destructive: 'bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90',
         outline:
           'border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground',

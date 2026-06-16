@@ -1,4 +1,4 @@
-# Home Dashboard Content — Read in Pace (Sub-project 2)
+# Home Dashboard Content — Read in Peace (Sub-project 2)
 
 ## Overview
 

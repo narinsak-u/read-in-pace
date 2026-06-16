@@ -25,7 +25,7 @@ function reload() {
       </p>
       <div class="mt-6 flex flex-wrap justify-center gap-2">
         <Button as-child variant="archival">
-          <NuxtLink to="/home">Go home</NuxtLink>
+          <NuxtLink to="/feed">Go home</NuxtLink>
         </Button>
         <Button v-if="error?.statusCode !== 404" variant="archivalOutline" @click="reload">Try again</Button>
       </div>

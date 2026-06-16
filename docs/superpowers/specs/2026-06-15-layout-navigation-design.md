@@ -1,4 +1,4 @@
-# Layout & Navigation — Read in Pace Ex Libris Port (Sub-project 1)
+# Layout & Navigation — Read in Peace Ex Libris Port (Sub-project 1)
 
 ## Overview
 
@@ -59,7 +59,7 @@ Includes:
 ### `AppNavbar.vue` (new)
 
 - Sticky top-0, z-40, border-b, backdrop-blur, bg-background/90
-- Left: Logo "Read in Pace" (font-serif, italic, text-primary, links to `/home`)
+- Left: Logo "Read in Peace" (font-serif, italic, text-primary, links to `/home`)
 - Center tabs (hidden on mobile, shown md+): Home / Explore / Shelf / Social
   - Active tab: `border-b border-primary text-foreground`
   - Inactive: `text-muted-foreground hover:text-foreground`

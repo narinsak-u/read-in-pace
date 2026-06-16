@@ -650,7 +650,7 @@ const submitting = shallowRef(false);
 
 definePageMeta({
   layout: 'app',
-  title: 'Social — Read in Pace',
+  title: 'Social — Read in Peace',
   description: 'Reader feed and community discussions.',
 });
 

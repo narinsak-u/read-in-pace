@@ -419,7 +419,7 @@ function scrollTo(id: string) {
           @click="scrollTo('loans')"
           class="font-serif text-xl font-bold italic tracking-tight text-primary"
         >
-          Read in Pace
+          Read in Peace
         </button>
         <div class="hidden items-center gap-6 text-xs font-medium uppercase tracking-wider text-muted-foreground md:flex">
           <button @click="scrollTo('loans')" class="border-b border-primary text-foreground">Dashboard</button>
@@ -759,7 +759,7 @@ const bookId = route.params.id as string
 const book = books[bookId]
 
 definePageMeta({
-  title: book ? `${book.title} by ${book.author} — Read in Pace` : 'Book — Read in Pace',
+  title: book ? `${book.title} by ${book.author} — Read in Peace` : 'Book — Read in Peace',
   description: book?.description ?? 'Discover this book and join its reader discussion.',
 })
 
@@ -838,7 +838,7 @@ function addLike(item: Review) {
   <div v-else class="min-h-screen bg-background pb-16 text-foreground">
     <header class="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-md">
       <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
-        <NuxtLink to="/home" class="font-serif text-xl font-bold italic text-primary">Read in Pace</NuxtLink>
+        <NuxtLink to="/home" class="font-serif text-xl font-bold italic text-primary">Read in Peace</NuxtLink>
         <div class="flex items-center gap-2">
           <Button as-child variant="archivalGhost">
             <NuxtLink to="/home"><ArrowLeft /> Back to the stacks</NuxtLink>
@@ -988,7 +988,7 @@ Port `new_design/src/routes/cart.tsx` (89 lines) plus keep discount pipeline.
 
 The Vue page must:
 - Be fully self-contained (header, cart items, order summary)
-- Use `definePageMeta({ title: 'Your Cart — Read in Pace' })`
+- Use `definePageMeta({ title: 'Your Cart — Read in Peace' })`
 - Show empty state when cart is empty
 - Show items with quantity controls, cover images, Remove button
 - Show order summary with Subtotal, Shipping, Estimated total
@@ -1004,7 +1004,7 @@ import CoverImage from '~/components/CoverImage.vue'
 import { useCartStore } from '~/stores/cart'
 
 definePageMeta({
-  title: 'Your Cart — Read in Pace',
+  title: 'Your Cart — Read in Peace',
   description: 'Review the books in your cart.',
 })
 
@@ -1019,7 +1019,7 @@ const subtotal = computed(() =>
   <div class="min-h-screen bg-background text-foreground">
     <header class="border-b border-border bg-background/90">
       <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-6">
-        <NuxtLink to="/home" class="font-serif text-xl font-bold italic text-primary">Read in Pace</NuxtLink>
+        <NuxtLink to="/home" class="font-serif text-xl font-bold italic text-primary">Read in Peace</NuxtLink>
         <Button as-child variant="archivalGhost">
           <NuxtLink to="/home"><ArrowLeft /> Continue browsing</NuxtLink>
         </Button>

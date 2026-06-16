@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import {
-  ArrowLeft, Minus, Plus, ShoppingCart, Trash2,
-} from 'lucide-vue-next';
+import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
 import { useCartStore } from '~/stores/cart';
 
 definePageMeta({
-  title: 'Your Cart — Read in Pace',
+  title: 'Your Cart — Read in Peace',
   description: 'Review the books in your cart.',
 });
 
@@ -15,14 +13,7 @@ const cart = useCartStore();
 
 <template>
   <div class="min-h-screen bg-background text-foreground">
-    <header class="border-b border-border bg-background/90">
-      <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-6">
-        <NuxtLink to="/home" class="font-serif text-xl font-bold italic text-primary">Read in Pace</NuxtLink>
-        <Button as-child variant="archivalGhost">
-          <NuxtLink to="/home"><ArrowLeft /> Continue browsing</NuxtLink>
-        </Button>
-      </div>
-    </header>
+    <Nav mode="cart" />
 
     <main class="mx-auto max-w-6xl px-4 py-10 md:px-6 lg:py-14">
       <div class="border-b border-border pb-5">
@@ -36,7 +27,7 @@ const cart = useCartStore();
         <h2 class="mt-5 font-serif text-2xl">Your book bag is empty.</h2>
         <p class="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">Browse the stacks and keep a permanent copy of something worth returning to.</p>
         <Button as-child variant="archival" class="mt-6">
-          <NuxtLink to="/home">Explore the library</NuxtLink>
+          <NuxtLink to="/feed">Explore the library</NuxtLink>
         </Button>
       </div>
 

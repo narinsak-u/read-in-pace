@@ -651,7 +651,7 @@ const notice = shallowRef('');
 
 definePageMeta({
   layout: 'app',
-  title: 'Home — Read in Pace',
+  title: 'Home — Read in Peace',
   description: 'Your personal library dashboard.',
 });
 

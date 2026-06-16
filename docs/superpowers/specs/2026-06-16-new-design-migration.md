@@ -21,7 +21,7 @@ Auth (Better Auth), Stripe checkout, and the backend API proxy remain connected 
 Single-page scrollable dashboard:
 
 **Sticky Navbar:**
-- Brand "Read in Pace" (serif, italic, links scroll to `#loans`)
+- Brand "Read in Peace" (serif, italic, links scroll to `#loans`)
 - Desktop nav: Dashboard, Discover, The Stacks, Archive (scroll-to-section buttons)
 - Search input (hidden on mobile), Cart link (icon + badge), user avatar button (initials, archival variant)
 - Fully self-contained in page component (no shared layout)
@@ -63,7 +63,7 @@ Single-page scrollable dashboard:
 ### `/book/:id` — Book Detail (rewrite from `new_design/src/routes/book.$bookId.tsx`)
 
 **Sticky Header:**
-- Brand "Read in Pace" link, "Back to the stacks" link, Cart link
+- Brand "Read in Peace" link, "Back to the stacks" link, Cart link
 
 **3-Column Section:**
 - **Left (300px)**: Book cover (direct image or sprite crop), shadow-2xl

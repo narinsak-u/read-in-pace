@@ -434,7 +434,7 @@ git commit -m "feat: create AppSidebar with Yearly Progress, Reader Feed, Book C
 <script setup lang="ts">
 definePageMeta({
   layout: 'app',
-  title: 'Home — Read in Pace',
+  title: 'Home — Read in Peace',
   description: 'Your personal library dashboard.',
 });
 </script>
@@ -482,8 +482,8 @@ watch(() => booksStore.showForm, (showing) => {
 
 definePageMeta({
   layout: 'app',
-  title: 'Explore — Read in Pace',
-  description: 'Browse trending books and the full library on Read in Pace.',
+  title: 'Explore — Read in Peace',
+  description: 'Browse trending books and the full library on Read in Peace.',
 });
 </script>
 
@@ -556,7 +556,7 @@ onMounted(async () => {
 
 definePageMeta({
   layout: 'app',
-  title: 'My Shelf — Read in Pace',
+  title: 'My Shelf — Read in Peace',
 });
 </script>
 
@@ -622,7 +622,7 @@ definePageMeta({
 <script setup lang="ts">
 definePageMeta({
   layout: 'app',
-  title: 'Social — Read in Pace',
+  title: 'Social — Read in Peace',
   description: 'Reader feed and community discussions.',
 });
 </script>
@@ -685,7 +685,7 @@ Add `layout: 'app'` to the existing `definePageMeta`:
 ```ts
 definePageMeta({
   layout: 'app',
-  title: 'Book — Read in Pace',
+  title: 'Book — Read in Peace',
 });
 ```
 
@@ -698,7 +698,7 @@ Add `layout: 'default'` to the existing `definePageMeta`:
 ```ts
 definePageMeta({
   layout: 'default',
-  title: "Read in Pace — A calmer way to read",
+  title: "Read in Peace — A calmer way to read",
   description:
     "A quiet library to review, borrow, return, and buy books at your own pace.",
 });

@@ -1,4 +1,4 @@
-# Visual Port — Ex Libris Design into Read in Pace
+# Visual Port — Ex Libris Design into Read in Peace
 
 ## Overview
 

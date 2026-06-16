@@ -214,7 +214,7 @@ function formatPrice(amount: number): string {
 
 definePageMeta({
   layout: 'cart',
-  title: 'Your Cart — Read in Pace',
+  title: 'Your Cart — Read in Peace',
   description: 'Review the books in your cart before checkout.',
 });
 </script>
@@ -223,7 +223,7 @@ definePageMeta({
   <header class="border-b border-border bg-background/90">
     <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-6">
       <NuxtLink to="/home" class="font-serif text-xl font-bold italic text-primary">
-        Read in Pace
+        Read in Peace
       </NuxtLink>
       <Button as-child variant="archivalGhost">
         <NuxtLink to="/explore"><ArrowLeft class="h-4 w-4 mr-1" /> Continue browsing</NuxtLink>

@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { toast } from 'vue-sonner';
 import { useAuthStore } from '~/stores/auth';
 
-const STORAGE_KEY = 'read-in-pace-cart';
+const STORAGE_KEY = 'read-in-peace-cart';
 
 export interface CartItem {
   id: string;
