@@ -1,14 +1,14 @@
 import { cva, type VariantProps } from "class-variance-authority";
 
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
           "bg-primary text-primary-foreground shadow hover:bg-primary/90",
         archival:
-          "rounded-sm bg-foreground text-background shadow-none hover:bg-primary",
+          "rounded-sm bg-(--color-foreground) text-(--color-background) shadow-none hover:bg-primary",
         archivalOutline:
           "rounded-sm border border-border bg-transparent text-foreground shadow-none hover:border-primary/40 hover:bg-card",
         archivalGhost:

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { Toaster } from "vue-sonner";
+import { useAuthStore } from "~/stores/auth";
 
 const { notice, flash } = useFlash();
 const route = useRoute();
+const auth = useAuthStore();
 const showDock = computed(() => route.name !== "index");
 </script>
 
@@ -11,12 +12,10 @@ const showDock = computed(() => route.name !== "index");
     <div class="flex-1">
       <slot />
     </div>
-    <!-- <footer class="border-t border-border py-6 text-center">
-      <p class="text-[11px] text-muted-foreground">&copy; 2026 Read in Peace</p>
-    </footer> -->
   </div>
   <BottomDock v-if="showDock" :flash="flash" />
-  <Toaster richColors position="top-center" />
+
+  <AuthModal v-if="auth.showAuthModal" @close="auth.closeAuthModal()" />
 
   <!-- Toast Notification -->
   <Teleport to="body">

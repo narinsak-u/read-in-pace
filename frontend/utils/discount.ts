@@ -1,4 +1,4 @@
-import type { CartItem } from '~/stores/cart';
+import type { CartItem } from "~/stores/cart";
 
 export interface DiscountBreakdown {
   subtotal: number;
@@ -18,10 +18,11 @@ interface CategorySubtotal {
 function getCategorySubtotals(items: readonly CartItem[]): CategorySubtotal[] {
   const map = new Map<string, { subtotal: number; count: number }>();
   for (const item of items) {
-    const existing = map.get(item.category) ?? { subtotal: 0, count: 0 };
+    const category = item.category ?? "uncategorized";
+    const existing = map.get(category) ?? { subtotal: 0, count: 0 };
     existing.subtotal += Math.round(item.price * 100);
     existing.count += 1;
-    map.set(item.category, existing);
+    map.set(category, existing);
   }
   return Array.from(map.entries()).map(([category, { subtotal, count }]) => ({
     category,

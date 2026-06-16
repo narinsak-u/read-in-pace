@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { useAuthStore } from '~/stores/auth';
+import { Button } from "~/components/ui/button";
+import { useAuthStore } from "~/stores/auth";
+import { z } from "zod";
 
 const emit = defineEmits<{
   close: [];
@@ -7,68 +9,95 @@ const emit = defineEmits<{
 
 const auth = useAuthStore();
 
-const tab = shallowRef<'sign-in' | 'sign-up'>('sign-in');
-const email = shallowRef('');
-const password = shallowRef('');
-const name = shallowRef('');
-const error = shallowRef('');
+const tab = shallowRef<"sign-in" | "sign-up">("sign-in");
+const email = shallowRef("");
+const password = shallowRef("");
+const name = shallowRef("");
+const error = shallowRef("");
 const submitting = shallowRef(false);
 
+const signInSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Please enter your email")
+    .email("Please enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Please enter a password")
+    .min(8, "Password must be at least 8 characters"),
+});
+
+const signUpSchema = signInSchema.extend({
+  name: z.string().min(1, "Please enter your name"),
+});
+
+function validate() {
+  const schema = tab.value === "sign-in" ? signInSchema : signUpSchema;
+  const data =
+    tab.value === "sign-in"
+      ? { email: email.value, password: password.value }
+      : { name: name.value, email: email.value, password: password.value };
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    error.value = result.error.issues[0].message;
+    return false;
+  }
+  return true;
+}
+
 async function handleSubmit() {
-  error.value = '';
-  if (tab.value === 'sign-up' && !name.value.trim()) {
-    error.value = 'Please enter your name';
-    return;
-  }
-  if (!email.value.trim()) {
-    error.value = 'Please enter your email';
-    return;
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
-    error.value = 'Please enter a valid email address';
-    return;
-  }
-  if (!password.value) {
-    error.value = 'Please enter a password';
-    return;
-  }
-  if (password.value.length < 8) {
-    error.value = 'Password must be at least 8 characters';
-    return;
-  }
+  error.value = "";
+  if (!validate()) return;
   submitting.value = true;
   try {
-    if (tab.value === 'sign-in') {
+    if (tab.value === "sign-in") {
       await auth.signIn(email.value, password.value);
     } else {
       await auth.signUp(name.value, email.value, password.value);
     }
-    emit('close');
+    emit("close");
   } catch (err: any) {
-    error.value = err?.data?.message || err?.message || 'Something went wrong';
+    error.value = err?.data?.message || err?.message || "Something went wrong";
   } finally {
     submitting.value = false;
   }
 }
 
-function switchTab(t: 'sign-in' | 'sign-up') {
+function switchTab(t: "sign-in" | "sign-up") {
   tab.value = t;
-  error.value = '';
+  error.value = "";
 }
 </script>
 
 <template>
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 backdrop-blur-sm"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4 backdrop-blur-sm"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="auth-title"
     @click.self="emit('close')"
   >
     <div
-      class="w-full max-w-sm rounded-sm border border-border bg-background p-8"
+      class="w-full max-w-sm border border-border bg-background p-6 shadow-2xl"
+      @mousedown.stop
     >
+      <!-- Header -->
       <div class="mb-6 text-center">
-        <h2 class="text-lg font-semibold tracking-tight">
-          Read<span class="text-primary"> in </span>Pace
+        <p
+          class="font-mono text-[10px] uppercase tracking-widest text-primary my-4"
+        >
+          Reader access
+        </p>
+        <h2 id="auth-title" class="mt-1 font-display text-3xl tracking-tight">
+          Read<span class="text-primary"> in </span>Peace
         </h2>
+        <p class="mt-2 text-sm text-muted-foreground">
+          {{
+            tab === "sign-in"
+              ? "Welcome back to the stacks."
+              : "Join the library."
+          }}
+        </p>
       </div>
 
       <!-- Tabs -->
@@ -76,14 +105,22 @@ function switchTab(t: 'sign-in' | 'sign-up') {
         <button
           @click="switchTab('sign-in')"
           class="flex-1 rounded-sm px-4 py-2 cursor-pointer text-sm font-medium transition-colors"
-          :class="tab === 'sign-in' ? 'bg-card text-foreground shadow' : 'text-muted-foreground hover:text-foreground'"
+          :class="
+            tab === 'sign-in'
+              ? 'bg-card text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          "
         >
           Sign In
         </button>
         <button
           @click="switchTab('sign-up')"
           class="flex-1 rounded-sm px-4 py-2 cursor-pointer text-sm font-medium transition-colors"
-          :class="tab === 'sign-up' ? 'bg-card text-foreground shadow' : 'text-muted-foreground hover:text-foreground'"
+          :class="
+            tab === 'sign-up'
+              ? 'bg-card text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          "
         >
           Sign Up
         </button>
@@ -98,8 +135,12 @@ function switchTab(t: 'sign-in' | 'sign-up') {
       </p>
 
       <!-- Name field (sign-up only) -->
-      <div v-if="tab === 'sign-up'" class="mb-4">
-        <label class="mb-1 block font-mono text-sm font-medium text-muted-foreground">Name</label>
+      <div v-if="tab === 'sign-up'" class="mb-5">
+        <label
+          class="mb-1.5 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground"
+        >
+          Name
+        </label>
         <input
           v-model="name"
           type="text"
@@ -109,8 +150,12 @@ function switchTab(t: 'sign-in' | 'sign-up') {
       </div>
 
       <!-- Email -->
-      <div class="mb-4">
-        <label class="mb-1 block font-mono text-sm font-medium text-muted-foreground">Email</label>
+      <div class="mb-5">
+        <label
+          class="mb-1.5 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground"
+        >
+          Email
+        </label>
         <input
           v-model="email"
           type="email"
@@ -121,7 +166,11 @@ function switchTab(t: 'sign-in' | 'sign-up') {
 
       <!-- Password -->
       <div class="mb-6">
-        <label class="mb-1 block font-mono text-sm font-medium text-muted-foreground">Password</label>
+        <label
+          class="mb-1.5 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground"
+        >
+          Password
+        </label>
         <input
           v-model="password"
           type="password"
@@ -133,24 +182,40 @@ function switchTab(t: 'sign-in' | 'sign-up') {
       <!-- Submit -->
       <Button
         variant="archival"
-        class="w-full"
+        class="w-full tracking-widest uppercase cursor-pointer"
         :disabled="submitting"
         @click="handleSubmit"
       >
-        {{ submitting ? 'Please wait...' : tab === 'sign-in' ? 'Sign in' : 'Create account' }}
+        {{
+          submitting
+            ? "Please&nbsp;wait…"
+            : tab === "sign-in"
+              ? "Sign in"
+              : "Create account"
+        }}
       </Button>
 
       <!-- Switch tab -->
-      <p class="mt-4 text-center text-sm text-muted-foreground">
+      <p class="mt-5 text-center text-sm text-muted-foreground">
         <template v-if="tab === 'sign-in'">
-          Don't have an account?
-          <Button variant="archivalGhost" size="sm" @click="switchTab('sign-up')">
+          Don&rsquo;t have an account?
+          <Button
+            class="cursor-pointer text-primary"
+            variant="archivalGhost"
+            size="sm"
+            @click="switchTab('sign-up')"
+          >
             Sign up
           </Button>
         </template>
         <template v-else>
           Already have an account?
-          <Button variant="archivalGhost" size="sm" @click="switchTab('sign-in')">
+          <Button
+            class="cursor-pointer text-primary"
+            variant="archivalGhost"
+            size="sm"
+            @click="switchTab('sign-in')"
+          >
             Sign in
           </Button>
         </template>

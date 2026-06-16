@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
-import { toast } from 'vue-sonner';
 import { useAuthStore } from '~/stores/auth';
+import { useFlash } from '~/composables/useFlash';
 
 const STORAGE_KEY = 'read-in-peace-cart';
 
@@ -17,6 +17,7 @@ export interface CartItem {
 
 export const useCartStore = defineStore('cart', () => {
   const items = ref<CartItem[]>([]);
+  const { flash } = useFlash();
 
   const itemCount = computed(() =>
     items.value.reduce((sum, item) => sum + item.quantity, 0),
@@ -107,11 +108,11 @@ export const useCartStore = defineStore('cart', () => {
       await navigateTo(res.url, { external: true });
     } catch (e: any) {
       if (e?.statusCode === 401) {
-        toast.error('Please sign in to checkout');
+        flash('Please sign in to checkout');
       } else if (e?.data?.message) {
-        toast.error(e.data.message);
+        flash(e.data.message);
       } else {
-        toast.error('Failed to start checkout');
+        flash('Failed to start checkout');
       }
     }
   }

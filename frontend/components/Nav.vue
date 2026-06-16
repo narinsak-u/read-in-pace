@@ -4,10 +4,12 @@ import { ArrowLeft, Search, ShoppingBag } from "lucide-vue-next";
 import { Button } from "~/components/ui/button";
 import { buttonVariants } from "~/components/ui/button/variants";
 import { useCartStore } from "~/stores/cart";
+import { useAuthStore } from "~/stores/auth";
+import { onClickOutside } from "@vueuse/core";
 
 const query = defineModel<string>("query", { default: "" });
 const cart = useCartStore();
-const router = useRouter();
+const auth = useAuthStore();
 
 const props = withDefaults(
   defineProps<{
@@ -19,6 +21,25 @@ const props = withDefaults(
 );
 
 const searchInput = ref<HTMLInputElement | null>(null);
+const showProfileMenu = ref(false);
+const profileMenuRef = ref<HTMLElement | null>(null);
+
+onClickOutside(profileMenuRef, () => {
+  showProfileMenu.value = false;
+});
+
+const initials = computed(() => {
+  if (!auth.user?.name) return "";
+  return auth.user.name.slice(0, 2).toUpperCase();
+});
+
+function toggleProfile() {
+  if (auth.signedIn) {
+    showProfileMenu.value = !showProfileMenu.value;
+  } else {
+    auth.openAuthModal();
+  }
+}
 
 function onKeydown(e: KeyboardEvent) {
   if ((e.ctrlKey || e.metaKey) && e.key === "k") {
@@ -46,14 +67,19 @@ onUnmounted(() => {
         <button
           v-if="mode === 'feed'"
           type="button"
-          class="font-display text-xl tracking-tight text-primary font-bold md:px-6"
+          class="font-display text-xl tracking-tight font-bold md:px-6"
         >
-          <NuxtLink to="/">Read in Peace</NuxtLink>
+          <NuxtLink to="/">
+            Read<span class="text-primary"> in </span>Peace
+          </NuxtLink>
         </button>
         <NuxtLink
           v-else
           to="/feed"
-          :class="buttonVariants({ variant: 'archivalGhost' }) + ' flex gap-2 items-center'"
+          :class="
+            buttonVariants({ variant: 'archivalGhost' }) +
+            ' flex gap-2 items-center'
+          "
         >
           <ArrowLeft />
           <span>
@@ -109,14 +135,42 @@ onUnmounted(() => {
         </Button>
 
         <!-- Profile -->
-        <Button
-          size="icon"
-          variant="archival"
-          aria-label="Open reader profile"
-          class="rounded-full text-xs italic"
-        >
-          JS
-        </Button>
+        <div ref="profileMenuRef" class="relative">
+          <Button
+            size="icon"
+            variant="archival"
+            :aria-label="auth.signedIn ? 'Open profile menu' : 'Sign in'"
+            class="rounded-full text-xs italic"
+            @click="toggleProfile"
+          >
+            {{ auth.signedIn ? initials : "?" }}
+          </Button>
+          <div
+            v-if="showProfileMenu"
+            class="absolute right-0 top-full mt-2 z-50 w-48 rounded-sm border border-border bg-white p-2 shadow-lg"
+          >
+            <p class="px-3 py-2 text-sm font-medium">
+              {{ auth.user?.name }}
+            </p>
+            <p class="px-3 pb-2 text-xs text-muted-foreground">
+              {{ auth.user?.email }}
+            </p>
+            <hr class="border-border" />
+            <Button
+              variant="archivalGhost"
+              size="sm"
+              class="w-full justify-start"
+              @click="
+                () => {
+                  auth.signOut();
+                  showProfileMenu = false;
+                }
+              "
+            >
+              Sign out
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   </nav>

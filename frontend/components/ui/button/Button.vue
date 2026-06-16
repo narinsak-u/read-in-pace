@@ -15,7 +15,15 @@ const props = withDefaults(
 </script>
 
 <template>
-  <button :class="buttonVariants({ variant, size, className: props.class })">
+  <button
+    :class="
+      buttonVariants({
+        variant: props.variant,
+        size: props.size,
+        className: props.class,
+      })
+    "
+  >
     <slot />
   </button>
 </template>
