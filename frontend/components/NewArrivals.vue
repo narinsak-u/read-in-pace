@@ -1,73 +1,103 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { ShoppingBag, Star } from 'lucide-vue-next';
-import { Button } from '~/components/ui/button';
-import { useCartStore } from '~/stores/cart';
+import { computed, ref, watch } from "vue";
+import { mapBookResponse, type Book } from "~/types/book";
+import { stockActions } from "~/utils/stock";
 
-const query = defineModel<string>('query', { default: '' });
+const query = defineModel<string>("query", { default: "" });
 
 defineProps<{
   flash: (message: string) => void;
 }>();
 
-const cart = useCartStore();
+const categories = ["How-to", "Fiction", "Manga"] as const;
+const PAGE_SIZE = 8;
 
-const arrivals = [
-  { id: 'the-hidden-sea', title: 'The Hidden Sea', author: 'Eliot Harbor', crop: 2, rating: 4.7, price: 18.5 },
-  { id: 'logic-and-form', title: 'Logic & Form', author: 'Adrian Wakefield', crop: 3, rating: 4.3, price: 24 },
-  { id: 'paper-shadows', title: 'Paper Shadows', author: 'Maeve Lincoln', crop: 4, rating: 4.8, price: 16 },
-  { id: 'the-long-night', title: 'The Long Night', author: 'Daniel Hastings', crop: 5, rating: 4.1, price: 19.99 },
-];
+const page = ref(1);
+const category = ref<string | undefined>(undefined);
+const localBorrowed = ref<string[]>([]);
 
-const borrowed = ref<string[]>([]);
+const { data: rawPage, refresh } = await useFetch<{
+  data: Record<string, unknown>[];
+  meta: { page: number; limit: number; total: number; totalPages: number };
+}>("/api/books", {
+  query: { page, limit: PAGE_SIZE, category },
+});
 
-const filtered = computed(() =>
-  arrivals.filter((book) =>
-    `${book.title} ${book.author}`.toLowerCase().includes(query.value.toLowerCase()),
-  ),
-);
+watch(page, () => refresh());
+watch(category, () => { page.value = 1; refresh(); });
+watch(query, () => { page.value = 1; });
+
+const books = computed<Book[]>(() => {
+  if (!rawPage.value?.data) return [];
+  return rawPage.value.data.map(mapBookResponse);
+});
+
+const meta = computed(() => rawPage.value?.meta ?? null);
+
+const filtered = computed(() => {
+  const q = query.value.toLowerCase().trim();
+  if (!q) return books.value;
+  return books.value.filter((b) =>
+    `${b.title} ${b.author}`.toLowerCase().includes(q),
+  );
+});
+
+const borrowedSlugs = computed(() => new Set(localBorrowed.value));
+
+const pageNumbers = computed(() => {
+  const total = meta.value?.totalPages ?? 1;
+  const current = page.value;
+  const pages: number[] = [];
+  const start = Math.max(1, current - 2);
+  const end = Math.min(total, current + 2);
+  for (let i = start; i <= end; i++) pages.push(i);
+  return pages;
+});
+
+function onCategoryChange(cat: string | undefined) {
+  category.value = cat;
+}
+
+function onPageGo(p: number) {
+  page.value = Math.max(1, Math.min(p, meta.value?.totalPages ?? 1));
+}
+
+function onBorrow(slug: string) {
+  localBorrowed.value.push(slug);
+}
 </script>
 
 <template>
   <section id="arrivals" class="animate-enter scroll-mt-24 [animation-delay:150ms]">
-    <div class="mb-6 flex items-baseline justify-between border-b border-border pb-2">
-      <h2 class="font-serif text-2xl">New Arrivals</h2>
-      <span class="font-mono text-[10px] uppercase text-muted-foreground">Curated this week</span>
+    <div class="mb-6 border-b border-border pb-3">
+      <div class="mb-3 flex items-baseline justify-between">
+        <h2 class="font-serif text-2xl">New Arrivals</h2>
+        <span v-if="meta" class="font-mono text-[10px] uppercase text-muted-foreground">{{ meta.total }} volumes</span>
+      </div>
+      <CategoryFilter :categories="categories" :active="category" @change="onCategoryChange" />
     </div>
+
     <div v-if="filtered.length > 0" class="grid grid-cols-2 gap-x-5 gap-y-8 md:grid-cols-4">
-      <article v-for="book in filtered" :key="book.id" class="group">
-        <NuxtLink :to="`/book/${book.id}`" :aria-label="`View ${book.title}`">
-          <CoverImage :crop="book.crop" class="mb-3 aspect-[2/3] shadow-md transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl" />
-        </NuxtLink>
-        <h3 class="font-serif text-sm font-bold transition-colors group-hover:text-primary">
-          <NuxtLink :to="`/book/${book.id}`">{{ book.title }}</NuxtLink>
-        </h3>
-        <p class="text-xs text-muted-foreground">{{ book.author }}</p>
-        <div class="mt-1 flex items-center gap-1 text-[10px] text-primary">
-          <Star class="size-3 fill-current" /> {{ book.rating }}
-        </div>
-        <div class="mt-3 flex gap-1">
-          <Button
-            size="sm"
-            :variant="borrowed.includes(book.title) ? 'archivalOutline' : 'archival'"
-            :disabled="borrowed.includes(book.title)"
-            @click="() => { borrowed.push(book.title); flash(`${book.title} borrowed for 21 days.`); }"
-          >
-            {{ borrowed.includes(book.title) ? 'Borrowed' : 'Borrow' }}
-          </Button>
-          <Button
-            size="icon"
-            variant="archivalGhost"
-            :aria-label="`Buy ${book.title}`"
-            @click="() => { cart.addItem({ id: book.id, title: book.title, author: book.author, price: book.price, cover: '/images/book-cover-sheet.png', crop: book.crop }); flash(`${book.title} added to your cart.`); }"
-          >
-            <ShoppingBag />
-          </Button>
-        </div>
-      </article>
+      <BookCard
+        v-for="book in filtered"
+        :key="book.id"
+        :book="book"
+        :actions="stockActions(book, borrowedSlugs)"
+        :flash="flash"
+        @borrow="onBorrow(book.slug)"
+      />
     </div>
+
     <p v-else class="border-y border-border py-12 text-center font-serif italic text-muted-foreground">
       No volumes match "{{ query }}". Try another title or author.
     </p>
+
+    <PaginationNav
+      v-if="(meta?.totalPages ?? 1) > 1 && filtered.length > 0"
+      :page="page"
+      :total-pages="meta?.totalPages ?? 1"
+      :page-numbers="pageNumbers"
+      @go="onPageGo"
+    />
   </section>
 </template>

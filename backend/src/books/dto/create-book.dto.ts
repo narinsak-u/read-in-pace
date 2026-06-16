@@ -12,6 +12,10 @@ import { Type } from 'class-transformer';
 export class CreateBookDto {
   @IsString()
   @MaxLength(255)
+  slug: string;
+
+  @IsString()
+  @MaxLength(255)
   title: string;
 
   @IsString()
@@ -32,6 +36,17 @@ export class CreateBookDto {
   @IsString()
   @MaxLength(100)
   category: string;
+
+  @IsOptional()
+  @IsNumber()
+  crop?: number;
+
+  @IsString()
+  @MaxLength(100)
+  shelf: string;
+
+  @IsNumber()
+  year: number;
 
   @IsOptional()
   @IsBoolean()

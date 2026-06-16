@@ -1,20 +1,10 @@
 <script setup lang="ts">
 import { Heart, MessageCircle } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
+import type { Book } from '~/types/book';
 
 defineProps<{
-  book: {
-    title: string;
-    author: string;
-    cover: string;
-    crop: number | null;
-    rating: number;
-    ratings: number;
-    shelf: string;
-    pages: number;
-    year: number;
-    description: string;
-  };
+  book: Book;
   flash: (message: string) => void;
 }>();
 
@@ -30,7 +20,7 @@ function scrollTo(id: string) {
     <div
       class="mb-5 flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
     >
-      <span>{{ book.year }}</span><span>&bull;</span><span>{{ book.pages }} pages</span><span>&bull;</span>
+      <span>{{ book.year }}</span><span>&bull;</span><span>{{ book.totalPages }} pages</span><span>&bull;</span>
       <span>Shelf {{ book.shelf }}</span>
     </div>
     <h1
@@ -43,15 +33,15 @@ function scrollTo(id: string) {
     </p>
     <div class="mt-7 flex items-center gap-3">
       <span class="text-lg text-primary">
-        {{ '★'.repeat(Math.round(book.rating)) }}<span class="text-foreground/10">{{ '★'.repeat(5 - Math.round(book.rating)) }}</span>
+        {{ '★'.repeat(Math.round(book.avgRating)) }}<span class="text-foreground/10">{{ '★'.repeat(5 - Math.round(book.avgRating)) }}</span>
       </span>
-      <strong>{{ book.rating }}</strong>
+      <strong>{{ book.avgRating.toFixed(2) }}</strong>
       <span class="text-sm text-muted-foreground"
-        >from {{ book.ratings }} reader ratings</span
+        >from {{ book.ratingsCount }} reader ratings</span
       >
     </div>
     <p class="mt-8 max-w-2xl text-base leading-7 text-foreground/75">
-      {{ book.description }}
+      {{ book.synopsis }}
     </p>
     <div class="mt-8 flex flex-wrap gap-3">
       <Button variant="archivalGhost" @click="saved = !saved">

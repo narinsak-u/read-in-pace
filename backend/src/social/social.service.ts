@@ -69,9 +69,7 @@ export class SocialService {
           ),
         );
     } else {
-      await this.db
-        .insert(schema.postLikes)
-        .values({ postId, userId });
+      await this.db.insert(schema.postLikes).values({ postId, userId });
     }
 
     const [result] = await this.db

@@ -8,12 +8,15 @@ definePageMeta({
   layout: "default",
 });
 
+import { useAuthStore } from '~/stores/auth';
+
 const query = ref("");
 const returned = ref<string[]>([]);
 const reviewOpen = ref(false);
 const rating = ref(0);
 const reviewText = ref("");
 const { notice, flash } = useFlash();
+const auth = useAuthStore();
 </script>
 
 <template>
@@ -25,6 +28,7 @@ const { notice, flash } = useFlash();
     <main class="mx-auto grid max-w-7xl grid-cols-12 gap-10 px-4 py-8 md:px-6">
       <div class="col-span-12 space-y-12 lg:col-span-8">
         <ActiveLoans
+          :mode="auth.signedIn ? 'loans' : 'trending'"
           :returned="returned"
           :flash="flash"
           @return="returned.push($event)"

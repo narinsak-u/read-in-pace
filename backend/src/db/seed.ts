@@ -167,32 +167,176 @@ async function seed() {
 
   // --- Books ---
 
-  const bookIds = Array.from({ length: 15 }, () => crypto.randomUUID());
-  const stockValues = [5, 3, 10, 9, 1, 8, 4, 7, 10, 3, 1, 5, 2, 0, 10];
-  const totalPagesValues = [
-    340, 280, 420, 310, 256, 380, 440, 290, 360, 200, 320, 400, 270, 350, 190,
+  function slugify(text: string): string {
+    return text
+      .toLowerCase()
+      .replace(/['']/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  // 7 frontend-specific books with known slugs, local covers, and sprite crop indices
+  const featuredBooks = [
+    {
+      id: 'a0000000-0000-0000-0000-000000000001',
+      slug: 'architecture-of-memory',
+      title: 'The Architecture of Memory',
+      author: 'Elena Rossi-Vaughn',
+      price: '21.00',
+      cover: '/images/architecture-memory.png',
+      synopsis:
+        'A luminous inquiry into the buildings we remember and the rooms we cannot forget. Moving between memorials, family homes, and imagined cities, Rossi-Vaughn asks how architecture becomes an archive of private and collective life.',
+      category: 'How-to',
+      crop: null,
+      shelf: '720.1 ARC',
+      year: 2026,
+      trending: true,
+      inStock: 3,
+      isAvailable: true,
+      totalPages: 340,
+    },
+    {
+      id: 'a0000000-0000-0000-0000-000000000002',
+      slug: 'silent-springs-revisited',
+      title: 'Silent Springs Revisited',
+      author: 'Marissa Langford',
+      price: '19.50',
+      cover: '/images/book-cover-sheet.png',
+      synopsis:
+        "A reflective journey through America's conservation legacy, revisiting the places and ideas that shaped a movement.",
+      category: 'How-to',
+      crop: 0,
+      shelf: '363.7 LAN',
+      year: 2025,
+      trending: false,
+      inStock: 4,
+      isAvailable: true,
+      totalPages: 320,
+    },
+    {
+      id: 'a0000000-0000-0000-0000-000000000003',
+      slug: 'urbanism-2050',
+      title: 'Urbanism 2050',
+      author: 'Lena Parker',
+      price: '27.00',
+      cover: '/images/book-cover-sheet.png',
+      synopsis:
+        'A visionary look at the cities of tomorrow — how technology, climate, and human behavior will reshape urban life by mid-century.',
+      category: 'How-to',
+      crop: 1,
+      shelf: '307.76 PAR',
+      year: 2026,
+      trending: false,
+      inStock: 2,
+      isAvailable: true,
+      totalPages: 400,
+    },
+    {
+      id: 'a0000000-0000-0000-0000-000000000004',
+      slug: 'the-hidden-sea',
+      title: 'The Hidden Sea',
+      author: 'Eliot Harbor',
+      price: '18.50',
+      cover: '/images/book-cover-sheet.png',
+      synopsis:
+        "A journey beneath the surface of the world's oceans, blending natural history, human curiosity, and the strange beauty of the deep into an unforgettable work of narrative nonfiction.",
+      category: 'Fiction',
+      crop: 2,
+      shelf: '551.46 HAR',
+      year: 2026,
+      trending: true,
+      inStock: 5,
+      isAvailable: true,
+      totalPages: 288,
+    },
+    {
+      id: 'a0000000-0000-0000-0000-000000000005',
+      slug: 'logic-and-form',
+      title: 'Logic & Form',
+      author: 'Adrian Wakefield',
+      price: '24.00',
+      cover: '/images/book-cover-sheet.png',
+      synopsis:
+        'Selected essays on reason, beauty, and the hidden structures that shape how we think. Precise without being austere, Wakefield makes philosophy feel wonderfully close at hand.',
+      category: 'Fiction',
+      crop: 3,
+      shelf: '160 WAK',
+      year: 2025,
+      trending: false,
+      inStock: 1,
+      isAvailable: true,
+      totalPages: 312,
+    },
+    {
+      id: 'a0000000-0000-0000-0000-000000000006',
+      slug: 'paper-shadows',
+      title: 'Paper Shadows',
+      author: 'Maeve Lincoln',
+      price: '16.00',
+      cover: '/images/book-cover-sheet.png',
+      synopsis:
+        'Seven short fictions about the stories we tell, the selves we leave behind, and the quiet thresholds between memory and invention.',
+      category: 'Fiction',
+      crop: 4,
+      shelf: 'FIC LIN',
+      year: 2026,
+      trending: true,
+      inStock: 0,
+      isAvailable: true,
+      totalPages: 224,
+    },
+    {
+      id: 'a0000000-0000-0000-0000-000000000007',
+      slug: 'the-long-night',
+      title: 'The Long Night',
+      author: 'Daniel Hastings',
+      price: '19.99',
+      cover: '/images/book-cover-sheet.png',
+      synopsis:
+        'When the world holds its breath, a remote household must decide what they owe one another. An atmospheric novel of isolation, loyalty, and the first light after darkness.',
+      category: 'Fiction',
+      crop: 5,
+      shelf: 'FIC HAS',
+      year: 2025,
+      trending: false,
+      inStock: 2,
+      isAvailable: true,
+      totalPages: 368,
+    },
   ];
 
-  const booksData = titles.map(([title, author], i) => ({
-    id: bookIds[i],
+  // Additional random catalog books
+  const extraBooks = titles.map(([title, author], i) => ({
+    id: crypto.randomUUID(),
+    slug: slugify(title),
     title,
     author,
     price: String(Math.round((9 + i * 1.7) * 100) / 100),
     cover: covers[i],
     synopsis: synopses[i],
     category: categories[i],
-    trending: i < 3,
-    inStock: stockValues[i],
+    crop: null,
+    shelf: 'GEN',
+    year: 2024 + (i % 3),
+    trending: false,
+    inStock: [5, 3, 10, 9, 1, 8, 4, 7, 10, 3, 1, 5, 2, 0, 10][i],
     isAvailable: true,
-    totalPages: totalPagesValues[i],
-    createdBy: '00000000-0000-0000-0000-000000000001',
+    totalPages: [
+      340, 280, 420, 310, 256, 380, 440, 290, 360, 200, 320, 400, 270, 350, 190,
+    ][i],
   }));
 
-  for (const book of booksData) {
-    await db.insert(schema.books).values(book).onConflictDoNothing();
+  const allBooks = [...featuredBooks, ...extraBooks];
+  const bookIds = allBooks.map((b) => b.id);
+
+  for (const book of allBooks) {
+    await db
+      .insert(schema.books)
+      .values({ ...book, createdBy: '00000000-0000-0000-0000-000000000001' })
+      .onConflictDoNothing();
   }
 
-  console.log(`Created ${booksData.length} books`);
+  console.log(`Created ${allBooks.length} books`);
 
   // --- Comments (2-3 per book) ---
 

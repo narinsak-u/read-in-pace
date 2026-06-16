@@ -13,6 +13,11 @@ export class UpdateBookDto {
   @IsOptional()
   @IsString()
   @MaxLength(255)
+  slug?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
   title?: string;
 
   @IsOptional()
@@ -38,6 +43,19 @@ export class UpdateBookDto {
   @IsString()
   @MaxLength(100)
   category?: string;
+
+  @IsOptional()
+  @IsNumber()
+  crop?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  shelf?: string;
+
+  @IsOptional()
+  @IsNumber()
+  year?: number;
 
   @IsOptional()
   @IsBoolean()

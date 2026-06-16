@@ -31,6 +31,16 @@ Monorepo (npm workspaces) with two packages:
 - `npm run test:watch` — Jest watch mode
 - `npm run test:cov` — Jest with coverage
 - `npm run test:e2e` — E2E tests (`test/`, uses `jest-e2e.json`)
+- `npm run db:migrate` — Apply Drizzle migrations (from `src/db/migrations/`)
+- `npm run db:seed` — Seed database with demo data (`ts-node src/db/seed.ts`)
+
+### Database setup (first time)
+```bash
+# From backend/ directory:
+docker compose up -d     # Start PostgreSQL
+npm run db:migrate       # Create all tables
+npm run db:seed          # Populate with seed data
+```
 
 ### Running a single test (backend)
 ```bash

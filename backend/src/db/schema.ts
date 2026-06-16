@@ -74,12 +74,16 @@ export const books = pgTable('books', {
   id: text('id')
     .primaryKey()
     .default(sql`gen_random_uuid()`),
+  slug: text('slug').notNull().unique(),
   title: text('title').notNull(),
   author: text('author').notNull(),
   price: numeric('price', { precision: 10, scale: 2 }).notNull(),
   cover: text('cover').notNull(),
   synopsis: text('synopsis').notNull(),
   category: text('category').notNull(),
+  crop: integer('crop'),
+  shelf: text('shelf').notNull(),
+  year: integer('year').notNull(),
   trending: boolean('trending').notNull().default(false),
   inStock: integer('in_stock').notNull().default(5),
   isAvailable: boolean('is_available').notNull().default(true),

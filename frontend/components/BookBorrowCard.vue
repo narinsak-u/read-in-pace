@@ -2,16 +2,10 @@
 import { BookOpen, Check, ShoppingBag } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
 import { useCartStore } from '~/stores/cart';
+import type { Book } from '~/types/book';
 
 const props = defineProps<{
-  book: {
-    title: string;
-    author: string;
-    cover: string;
-    crop: number | null;
-    price: string;
-    available: number;
-  };
+  book: Book;
   bookId: string;
   flash: (message: string) => void;
 }>();
@@ -27,14 +21,14 @@ const borrowed = ref(false);
     </p>
     <div class="mt-4 flex items-start gap-3">
       <span
-        :class="`mt-1 size-2 rounded-full ${book.available > 0 ? 'bg-primary' : 'bg-muted-foreground'}`"
+        :class="`mt-1 size-2 rounded-full ${book.inStock > 0 ? 'bg-primary' : 'bg-muted-foreground'}`"
       />
       <div>
         <p class="font-medium">
           {{
             borrowed
               ? 'On your desk'
-              : book.available > 0
+              : book.inStock > 0
                 ? 'Available now'
                 : 'Currently checked out'
           }}
@@ -43,8 +37,8 @@ const borrowed = ref(false);
           {{
             borrowed
               ? 'Due July 5, 2026 \u00B7 21-day loan'
-              : book.available > 0
-                ? `${book.available} ${book.available === 1 ? 'copy' : 'copies'} ready to borrow`
+              : book.inStock > 0
+                ? `${book.inStock} ${book.inStock === 1 ? 'copy' : 'copies'} ready to borrow`
                 : 'Join the waitlist to be notified'
           }}
         </p>
@@ -65,7 +59,7 @@ const borrowed = ref(false);
       {{
         borrowed
           ? 'Borrowed'
-          : book.available > 0
+          : book.inStock > 0
             ? 'Borrow for 21 days'
             : 'Join waitlist'
       }}

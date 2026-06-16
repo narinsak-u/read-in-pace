@@ -366,6 +366,7 @@ export class TransactionsService {
         },
         book: {
           id: schema.books.id,
+          slug: schema.books.slug,
           title: schema.books.title,
           author: schema.books.author,
           price: schema.books.price,
@@ -375,6 +376,9 @@ export class TransactionsService {
           trending: schema.books.trending,
           inStock: schema.books.inStock,
           isAvailable: schema.books.isAvailable,
+          crop: schema.books.crop,
+          shelf: schema.books.shelf,
+          year: schema.books.year,
         },
       })
       .from(schema.borrows)
@@ -399,6 +403,7 @@ export class TransactionsService {
         },
         book: {
           id: schema.books.id,
+          slug: schema.books.slug,
           title: schema.books.title,
           author: schema.books.author,
           price: schema.books.price,
@@ -408,6 +413,9 @@ export class TransactionsService {
           trending: schema.books.trending,
           inStock: schema.books.inStock,
           isAvailable: schema.books.isAvailable,
+          crop: schema.books.crop,
+          shelf: schema.books.shelf,
+          year: schema.books.year,
         },
       })
       .from(schema.purchases)

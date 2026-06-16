@@ -10,7 +10,7 @@ import {
 import { DRIZZLE } from '../db/db.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../db/schema';
-import { desc, eq, sql, count, gt, and } from 'drizzle-orm';
+import { desc, eq, sql, count, gt, and, or } from 'drizzle-orm';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 
@@ -20,21 +20,27 @@ export class BooksService {
 
   private bookWithMeta = {
     id: schema.books.id,
+    slug: schema.books.slug,
     title: schema.books.title,
     author: schema.books.author,
     price: schema.books.price,
     cover: schema.books.cover,
     synopsis: schema.books.synopsis,
     category: schema.books.category,
+    crop: schema.books.crop,
+    shelf: schema.books.shelf,
+    year: schema.books.year,
     trending: schema.books.trending,
     inStock: schema.books.inStock,
     isAvailable: schema.books.isAvailable,
+    totalPages: schema.books.totalPages,
     createdBy: schema.books.createdBy,
     createdAt: schema.books.createdAt,
     updatedAt: schema.books.updatedAt,
     likeCount: sql<number>`(SELECT COUNT(*) FROM ${schema.likes} WHERE ${schema.likes.bookId} = ${schema.books.id})`,
     commentCount: sql<number>`(SELECT COUNT(*) FROM ${schema.comments} WHERE ${schema.comments.bookId} = ${schema.books.id})`,
     avgRating: sql<number>`COALESCE((SELECT AVG(${schema.ratings.rating}) FROM ${schema.ratings} WHERE ${schema.ratings.bookId} = ${schema.books.id}), 0)`,
+    ratingsCount: sql<number>`(SELECT COUNT(*) FROM ${schema.ratings} WHERE ${schema.ratings.bookId} = ${schema.books.id})`,
   } as const;
 
   private avgRatingOrderBy = desc(
@@ -71,11 +77,13 @@ export class BooksService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(idOrSlug: string) {
     const [book] = await this.db
       .select(this.bookWithMeta)
       .from(schema.books)
-      .where(eq(schema.books.id, id));
+      .where(
+        or(eq(schema.books.slug, idOrSlug), eq(schema.books.id, idOrSlug)),
+      );
 
     if (!book) throw new NotFoundException('Book not found');
     return book;

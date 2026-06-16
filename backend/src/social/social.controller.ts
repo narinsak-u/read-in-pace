@@ -34,19 +34,13 @@ export class SocialController {
 
   @Post(':id/like')
   @UseGuards(AuthGuard)
-  toggleLike(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  toggleLike(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.socialService.toggleLike(id, user.id);
   }
 
   @Get(':id/like')
   @UseGuards(AuthGuard)
-  getLikeStatus(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  getLikeStatus(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.socialService.getLikeStatus(id, user.id);
   }
 
