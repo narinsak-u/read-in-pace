@@ -2,6 +2,8 @@
 import { Toaster } from "vue-sonner";
 
 const { notice, flash } = useFlash();
+const route = useRoute();
+const showDock = computed(() => route.name !== "index");
 </script>
 
 <template>
@@ -13,7 +15,7 @@ const { notice, flash } = useFlash();
       <p class="text-[11px] text-muted-foreground">&copy; 2026 Read in Peace</p>
     </footer> -->
   </div>
-  <BottomDock :flash="flash" />
+  <BottomDock v-if="showDock" :flash="flash" />
   <Toaster richColors position="top-center" />
 
   <!-- Toast Notification -->
