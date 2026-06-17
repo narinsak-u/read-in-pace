@@ -13,7 +13,7 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { STRIPE } from './stripe.provider';
 import StripeConstructor from 'stripe';
 import * as schema from '../db/schema';
-import { eq, and, isNull, sql, gt } from 'drizzle-orm';
+import { eq, and, isNull, sql, gt, count, asc } from 'drizzle-orm';
 
 type StripeClient = ReturnType<typeof StripeConstructor>;
 
@@ -351,8 +351,22 @@ export class TransactionsService {
     });
   }
 
-  async getUserBorrows(userId: string) {
-    return this.db
+  async getUserBorrows(userId: string, page = 1, limit = 10) {
+    const offset = (page - 1) * limit;
+
+    const [totalResult] = await this.db
+      .select({ total: count() })
+      .from(schema.borrows)
+      .where(
+        and(
+          eq(schema.borrows.userId, userId),
+          isNull(schema.borrows.returnedAt),
+        ),
+      );
+
+    const total = totalResult?.total ?? 0;
+
+    const data = await this.db
       .select({
         borrow: {
           id: schema.borrows.id,
@@ -379,6 +393,8 @@ export class TransactionsService {
           crop: schema.books.crop,
           shelf: schema.books.shelf,
           year: schema.books.year,
+          avgRating: sql<number>`COALESCE((SELECT AVG(${schema.ratings.rating}) FROM ${schema.ratings} WHERE ${schema.ratings.bookId} = ${schema.books.id}), 0)`,
+          ratingsCount: sql<number>`(SELECT COUNT(*) FROM ${schema.ratings} WHERE ${schema.ratings.bookId} = ${schema.books.id})`,
         },
       })
       .from(schema.borrows)
@@ -389,7 +405,14 @@ export class TransactionsService {
           isNull(schema.borrows.returnedAt),
         ),
       )
-      .orderBy(sql`${schema.borrows.borrowedAt} DESC`);
+      .orderBy(sql`${schema.borrows.borrowedAt} DESC`)
+      .limit(limit)
+      .offset(offset);
+
+    return {
+      data,
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async getUserPurchases(userId: string) {
@@ -416,6 +439,8 @@ export class TransactionsService {
           crop: schema.books.crop,
           shelf: schema.books.shelf,
           year: schema.books.year,
+          avgRating: sql<number>`COALESCE((SELECT AVG(${schema.ratings.rating}) FROM ${schema.ratings} WHERE ${schema.ratings.bookId} = ${schema.books.id}), 0)`,
+          ratingsCount: sql<number>`(SELECT COUNT(*) FROM ${schema.ratings} WHERE ${schema.ratings.bookId} = ${schema.books.id})`,
         },
       })
       .from(schema.purchases)

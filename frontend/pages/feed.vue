@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useAuthStore } from "~/stores/auth";
 import { Button } from "~/components/ui/button";
 
 definePageMeta({
@@ -8,10 +9,7 @@ definePageMeta({
   layout: "default",
 });
 
-import { useAuthStore } from '~/stores/auth';
-
 const query = shallowRef("");
-const returned = ref<string[]>([]);
 const reviewOpen = shallowRef(false);
 const rating = shallowRef(0);
 const reviewText = shallowRef("");
@@ -29,9 +27,7 @@ const auth = useAuthStore();
       <div class="col-span-12 space-y-12 lg:col-span-8">
         <ActiveLoans
           :mode="auth.signedIn ? 'loans' : 'trending'"
-          :returned="returned"
           :flash="flash"
-          @return="returned.push($event)"
           @open-review="reviewOpen = true"
         />
         <NewArrivals v-model:query="query" :flash="flash" />

@@ -1,28 +1,25 @@
 <script setup lang="ts">
-import { useAuthStore } from '~/stores/auth';
-import { mapBookResponse, type Book } from '~/types/book';
+import { useAuthStore } from "~/stores/auth";
+import { mapBookResponse, type Book } from "~/types/book";
 
 const props = defineProps<{
-  mode: 'loans' | 'trending';
-  returned?: string[];
+  mode: "loans" | "trending";
   flash: (message: string) => void;
 }>();
 
 const emit = defineEmits<{
-  return: [slug: string];
-  'open-review': [];
+  "open-review": [];
 }>();
 
 const auth = useAuthStore();
 
 // --- Trending ---
-
 const trendingBooks = ref<Book[]>([]);
 const trendingLoaded = shallowRef(false);
 
 async function fetchTrending() {
   try {
-    const raw = await $fetch<Record<string, unknown>[]>('/api/books/trending');
+    const raw = await $fetch<Record<string, unknown>[]>("/api/books/trending");
     trendingBooks.value = raw.map(mapBookResponse);
   } catch {
     trendingBooks.value = [];
@@ -32,7 +29,6 @@ async function fetchTrending() {
 }
 
 // --- Loans ---
-
 interface BorrowItem {
   borrowId: string;
   bookId: string;
@@ -42,82 +38,138 @@ interface BorrowItem {
   cover: string;
   crop: number | null;
   shelf: string;
+  category: string;
   dueAt: string;
   currentPage: number;
   totalPages: number;
   price: string;
   inStock: number;
+  avgRating: number;
+  ratingsCount: number;
 }
 
-const rawBorrows = ref<{ borrow: Record<PropertyKey, unknown>; book: Record<PropertyKey, unknown> }[] | null>(null);
+interface BorrowsResponse {
+  data: {
+    borrow: Record<PropertyKey, unknown>;
+    book: Record<PropertyKey, unknown>;
+  }[];
+  meta: { page: number; limit: number; total: number; totalPages: number };
+}
+
+const LIMIT = 3;
+const allBorrows = ref<BorrowItem[]>([]);
+const borrowsPage = shallowRef(1);
+const borrowsMeta = shallowRef<BorrowsResponse['meta'] | null>(null);
 const borrowError = shallowRef<unknown>(null);
 const loansLoaded = shallowRef(false);
 
-async function fetchBorrows() {
+const hasMore = computed(() => {
+  if (!borrowsMeta.value) return false;
+  return borrowsPage.value < borrowsMeta.value.totalPages;
+});
+
+async function fetchBorrows(page = 1, append = false) {
   if (!auth.signedIn) {
-    rawBorrows.value = null;
+    allBorrows.value = [];
     loansLoaded.value = true;
     return;
   }
   try {
-    rawBorrows.value = await $fetch('/api/user/borrows');
+    const res = await $fetch<BorrowsResponse>('/api/user/borrows', {
+      query: { page, limit: LIMIT },
+    });
+    const items = res.data.map((entry) => ({
+      borrowId: entry.borrow.id as string,
+      bookId: entry.book.id as string,
+      bookSlug: (entry.book.slug as string) ?? (entry.book.id as string),
+      title: entry.book.title as string,
+      author: entry.book.author as string,
+      cover: entry.book.cover as string,
+      crop: (entry.book.crop as number | null) ?? null,
+      shelf: (entry.book.shelf as string) ?? 'GEN',
+      category: (entry.book.category as string) ?? '',
+      dueAt: entry.borrow.dueAt as string,
+      currentPage: entry.borrow.currentPage as number,
+      totalPages: entry.borrow.totalPages as number,
+      price: String(entry.book.price ?? '0'),
+      inStock: (entry.book.inStock as number) ?? 0,
+      avgRating: Number(entry.book.avgRating ?? 0),
+      ratingsCount: (entry.book.ratingsCount as number) ?? 0,
+    }));
+    if (append) {
+      allBorrows.value = [...allBorrows.value, ...items];
+    } else {
+      allBorrows.value = items;
+    }
+    borrowsPage.value = page;
+    borrowsMeta.value = res.meta;
     borrowError.value = null;
   } catch (e) {
-    rawBorrows.value = null;
+    if (!append) allBorrows.value = [];
     borrowError.value = e;
   } finally {
     loansLoaded.value = true;
   }
 }
 
-const loans = computed<BorrowItem[]>(() => {
-  if (!rawBorrows.value) return [];
-  return rawBorrows.value.map((entry) => ({
-    borrowId: entry.borrow.id as string,
-    bookId: entry.book.id as string,
-    bookSlug: (entry.book.slug as string) ?? (entry.book.id as string),
-    title: entry.book.title as string,
-    author: entry.book.author as string,
-    cover: entry.book.cover as string,
-    crop: (entry.book.crop as number | null) ?? null,
-    shelf: (entry.book.shelf as string) ?? 'GEN',
-    dueAt: entry.borrow.dueAt as string,
-    currentPage: entry.borrow.currentPage as number,
-    totalPages: entry.borrow.totalPages as number,
-    price: String(entry.book.price ?? '0'),
-    inStock: (entry.book.inStock as number) ?? 0,
-  }));
-});
+function loadMore() {
+  if (!hasMore.value) return;
+  fetchBorrows(borrowsPage.value + 1, true);
+}
 
-// --- Shared state ---
+const loans = computed(() => allBorrows.value);
 
-const localBorrowed = ref<string[]>([]);
+// --- Borrow / Return API ---
 const userBorrowedSlugs = computed(() => {
-  const slugs = new Set(localBorrowed.value);
+  const slugs = new Set<string>();
   for (const loan of loans.value) {
     slugs.add(loan.bookSlug);
   }
   return slugs;
 });
 
-function onBorrow(slug: string) {
-  if (localBorrowed.value.includes(slug)) {
-    emit('return', slug);
-    props.flash(`Book returned. Thank you!`);
-    localBorrowed.value = localBorrowed.value.filter((s) => s !== slug);
-  } else {
-    localBorrowed.value.push(slug);
-    props.flash(`Book borrowed for 21 days.`);
+// handle borrow book
+// then fetch borrows and trending books
+async function borrowBook(bookId: string) {
+  try {
+    await $fetch(`/api/books/${bookId}/borrow`, { method: "POST" });
+    props.flash("Book borrowed for 14 days.");
+    await Promise.all([fetchBorrows(1), fetchTrending()]);
+  } catch (e: any) {
+    if (e?.status === 401) {
+      auth.openAuthModal();
+    } else if (e?.data?.message) {
+      props.flash(e.data.message);
+    } else {
+      props.flash("Could not borrow the book. Please try again.");
+    }
   }
 }
 
-// Init
-if (props.mode === 'trending') {
+async function returnBook(bookId: string, title: string) {
+  try {
+    await $fetch(`/api/books/${bookId}/return`, { method: "POST" });
+    props.flash(`${title} returned. Thank you!`);
+    await Promise.all([fetchBorrows(1), fetchTrending()]);
+  } catch (e: any) {
+    props.flash(e?.data?.message || "Could not return the book.");
+  }
+}
+
+function onBorrow(_slug: string, bookId: string) {
+  if (!auth.signedIn) {
+    auth.openAuthModal();
+    return;
+  }
+  borrowBook(bookId);
+}
+
+if (props.mode === "trending") {
   fetchTrending();
 } else {
-  fetchBorrows();
+  fetchBorrows(1);
   watch(() => auth.signedIn, (val) => {
-    if (val) fetchBorrows();
+    if (val) fetchBorrows(1);
   });
 }
 </script>
@@ -126,15 +178,25 @@ if (props.mode === 'trending') {
   <section id="loans" class="animate-enter scroll-mt-24">
     <!-- Trending -->
     <template v-if="mode === 'trending'">
-      <div class="mb-6 flex items-baseline justify-between border-b border-border pb-2">
+      <div
+        class="mb-6 flex items-baseline justify-between border-b border-border pb-2"
+      >
         <h1 class="font-serif text-2xl">Trending Now</h1>
-        <span class="font-mono text-[10px] uppercase text-muted-foreground">Most popular this month</span>
+        <span class="font-mono text-[10px] uppercase text-muted-foreground">
+          Most popular this month
+        </span>
       </div>
 
-      <div v-if="!trendingLoaded" class="border-y border-border py-12 text-center font-serif italic text-muted-foreground">
+      <div
+        v-if="!trendingLoaded"
+        class="border-y border-border py-12 text-center font-serif italic text-muted-foreground"
+      >
         Loading trending books...
       </div>
-      <div v-else-if="trendingBooks.length === 0" class="border-y border-border py-12 text-center font-serif italic text-muted-foreground">
+      <div
+        v-else-if="trendingBooks.length === 0"
+        class="border-y border-border py-12 text-center font-serif italic text-muted-foreground"
+      >
         No trending books right now.
       </div>
       <TrendingSection
@@ -142,30 +204,53 @@ if (props.mode === 'trending') {
         :books="trendingBooks"
         :borrowed-slugs="userBorrowedSlugs"
         :flash="flash"
-        @borrow="onBorrow"
+        @borrow="(slug, bookId) => onBorrow(slug, bookId)"
       />
     </template>
 
     <!-- Loans -->
     <template v-else>
-      <div class="mb-6 flex items-baseline justify-between border-b border-border pb-2">
+      <div
+        class="mb-6 flex items-baseline justify-between border-b border-border pb-2"
+      >
         <h1 class="font-serif text-2xl">Active Loans</h1>
-        <span class="font-mono text-[10px] uppercase text-muted-foreground">{{ loans.length }} items currently on desk</span>
+        <span class="font-mono text-[10px] uppercase text-muted-foreground">
+          {{ loans.length }} items currently on desk
+        </span>
       </div>
 
-      <div v-if="!loansLoaded" class="border-y border-border py-12 text-center font-serif italic text-muted-foreground">
+      <div
+        v-if="!loansLoaded"
+        class="border-y border-border py-12 text-center font-serif italic text-muted-foreground"
+      >
         Loading your loans...
       </div>
-      <div v-else-if="!auth.signedIn" class="border-y border-border py-12 text-center font-serif italic text-muted-foreground">
+      <div
+        v-else-if="!auth.signedIn"
+        class="border-y border-border py-12 text-center font-serif italic text-muted-foreground"
+      >
         Sign in to see your active loans.
       </div>
-      <div v-else-if="borrowError" class="border-y border-border py-12 text-center font-serif italic text-muted-foreground">
+      <div
+        v-else-if="borrowError"
+        class="border-y border-border py-12 text-center font-serif italic text-muted-foreground"
+      >
         Could not load your loans. Please try again.
       </div>
 
       <template v-else>
-        <LoansSection :loans="loans" :flash="flash" @return="emit('return', $event)" @open-review="emit('open-review')" />
-        <div v-if="loans.length === 0" class="border-y border-border py-12 text-center font-serif italic text-muted-foreground">
+        <LoansSection
+          :loans="loans"
+          :has-more="hasMore"
+          :flash="flash"
+          @return="(bookId, title) => returnBook(bookId, title)"
+          @open-review="emit('open-review')"
+          @load-more="loadMore"
+        />
+        <div
+          v-if="loans.length === 0"
+          class="border-y border-border py-12 text-center font-serif italic text-muted-foreground"
+        >
           No active loans. Browse the library to borrow a book.
         </div>
       </template>

@@ -20,7 +20,10 @@ export interface Book {
   ratingsCount: number;
 }
 
-export type BookCard = Pick<Book, 'id' | 'slug' | 'title' | 'author' | 'cover' | 'crop' | 'avgRating' | 'price'>;
+export type BookCard = Pick<
+  Book,
+  "id" | "slug" | "title" | "author" | "cover" | "crop" | "avgRating" | "price"
+>;
 
 export function mapBookResponse(raw: Record<string, unknown>): Book {
   return {
@@ -28,7 +31,7 @@ export function mapBookResponse(raw: Record<string, unknown>): Book {
     slug: raw.slug as string,
     title: raw.title as string,
     author: raw.author as string,
-    price: String(raw.price ?? '0'),
+    price: String(raw.price ?? "0"),
     cover: raw.cover as string,
     synopsis: raw.synopsis as string,
     category: raw.category as string,

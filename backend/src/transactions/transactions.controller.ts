@@ -62,8 +62,16 @@ export class TransactionsController {
 
   @Get('api/user/borrows')
   @UseGuards(AuthGuard)
-  myBorrows(@CurrentUser() user: { id: string }) {
-    return this.transactionsService.getUserBorrows(user.id);
+  myBorrows(
+    @CurrentUser() user: { id: string },
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.transactionsService.getUserBorrows(
+      user.id,
+      page ? Number(page) : 1,
+      limit ? Number(limit) : 3,
+    );
   }
 
   @Get('api/user/purchases')
