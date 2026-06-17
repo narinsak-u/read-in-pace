@@ -2,7 +2,7 @@
 import { Button } from "~/components/ui/button";
 
 interface Review {
-  id: number;
+  id: string;
   initials: string;
   name: string;
   time: string;

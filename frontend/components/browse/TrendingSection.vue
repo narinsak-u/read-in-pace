@@ -13,6 +13,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   borrow: [slug: string, bookId: string];
+  return: [slug: string, bookId: string];
 }>();
 
 const cart = useCartStore();
@@ -42,7 +43,7 @@ function buy(book: Book) {
 
     <template #actions="{ book }">
       <template v-if="actions(book).isBorrowed">
-        <Button variant="archival" @click="$emit('borrow', book.slug, book.id)">Return Book</Button>
+        <Button variant="archival" @click="$emit('return', book.slug, book.id)">Return Book</Button>
       </template>
       <template v-else-if="actions(book).canBorrow">
         <Button variant="archival" @click="$emit('borrow', book.slug, book.id)">Borrow</Button>
@@ -62,7 +63,7 @@ function buy(book: Book) {
     <template #compactActions="{ book }">
       <div class="flex items-center gap-1">
         <template v-if="actions(book).isBorrowed">
-          <Button size="sm" variant="archivalGhost" @click="$emit('borrow', book.slug, book.id)">Return</Button>
+          <Button size="sm" variant="archivalGhost" @click="$emit('return', book.slug, book.id)">Return</Button>
         </template>
         <template v-else-if="actions(book).canBorrow">
           <Button size="sm" variant="archivalGhost" @click="$emit('borrow', book.slug, book.id)">Borrow</Button>

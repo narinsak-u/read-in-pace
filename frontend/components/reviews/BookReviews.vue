@@ -1,8 +1,24 @@
 <script setup lang="ts">
 import { Button } from '~/components/ui/button';
 
+interface CommentUser {
+  id: string;
+  name: string;
+  image: string | null;
+}
+
+interface ApiComment {
+  id: string;
+  bookId: string;
+  userId: string;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+  user: CommentUser;
+}
+
 interface Review {
-  id: number;
+  id: string;
   initials: string;
   name: string;
   time: string;
@@ -12,41 +28,64 @@ interface Review {
   replies: string[];
 }
 
-const { flash } = defineProps<{
+const { flash, bookId } = defineProps<{
   flash: (message: string) => void;
+  bookId: string;
 }>();
 
-const reviews = ref<Review[]>([
-  {
-    id: 1,
-    initials: 'AM',
-    name: 'Aris M.',
-    time: '14m ago',
-    rating: 5,
-    text: 'The chapter on brutalist memorials is devastating. I kept returning to its idea that a building can remember on our behalf.',
-    likes: 12,
-    replies: ['That was the passage that stayed with me too. \u2014 Mina K.'],
-  },
-  {
-    id: 2,
-    initials: 'LW',
-    name: 'Leo Wang',
-    time: '2h ago',
-    rating: 4,
-    text: 'Measured, elegant, and full of unexpected connections. The middle essays wander, but the final one brings everything home.',
-    likes: 8,
+const reviews = ref<Review[]>([]);
+const loaded = shallowRef(false);
+
+function getInitials(name: string): string {
+  return name.toUpperCase().slice(0, 2);
+}
+
+function timeAgo(dateStr: string): string {
+  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return 'Yesterday';
+  return `${days}d ago`;
+}
+
+function mapCommentToReview(comment: ApiComment): Review {
+  return {
+    id: comment.id,
+    initials: getInitials(comment.user.name),
+    name: comment.user.name,
+    time: timeAgo(comment.createdAt),
+    rating: 0,
+    text: comment.text,
+    likes: 0,
     replies: [],
-  },
-]);
+  };
+}
+
+async function fetchComments() {
+  try {
+    const data = await $fetch<ApiComment[]>(`/api/books/${bookId}/comments`);
+    reviews.value = data.map(mapCommentToReview);
+  } catch {
+    reviews.value = [];
+  } finally {
+    loaded.value = true;
+  }
+}
+
+onMounted(fetchComments);
 
 const rating = shallowRef(0);
 const reviewText = shallowRef('');
-const replyingTo = shallowRef<number | null>(null);
+const replyingTo = shallowRef<string | null>(null);
 
 function publishReview() {
   if (!rating.value || !reviewText.value.trim()) return;
   reviews.value.unshift({
-    id: Date.now(),
+    id: crypto.randomUUID(),
     initials: 'JS',
     name: 'Jamie S.',
     time: 'Just now',
@@ -60,9 +99,9 @@ function publishReview() {
   flash('Your review is now part of the discussion.');
 }
 
-function publishReply(reviewId: number, text: string) {
+function publishReply(reviewId: string, text: string) {
   reviews.value = reviews.value.map((r) =>
-    r.id === reviewId ? { ...r, replies: [...r.replies, `${text} \u2014 Jamie S.`] } : r,
+    r.id === reviewId ? { ...r, replies: [...r.replies, `${text} — Jamie S.`] } : r,
   );
   replyingTo.value = null;
 }

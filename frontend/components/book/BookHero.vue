@@ -40,6 +40,14 @@ function scrollTo(id: string) {
         >from {{ book.ratingsCount }} reader ratings</span
       >
     </div>
+    <div class="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
+      <span class="flex items-center gap-1">
+        <Heart class="size-4" /> {{ book.likeCount }} {{ book.likeCount === 1 ? 'like' : 'likes' }}
+      </span>
+      <span class="flex items-center gap-1">
+        <MessageCircle class="size-4" /> {{ book.commentCount }} {{ book.commentCount === 1 ? 'comment' : 'comments' }}
+      </span>
+    </div>
     <p class="mt-8 max-w-2xl text-base leading-7 text-foreground/75">
       {{ book.synopsis }}
     </p>

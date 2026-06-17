@@ -3,6 +3,7 @@ import { computed, shallowRef, watch } from "vue";
 import { mapBookResponse, type Book } from "~/types/book";
 import { stockActions } from "~/utils/stock";
 import { useAuthStore } from "~/stores/auth";
+import { useLibraryStore } from "~/stores/library";
 
 const query = defineModel<string>("query", { default: "" });
 
@@ -11,12 +12,12 @@ const props = defineProps<{
 }>();
 
 const auth = useAuthStore();
+const store = useLibraryStore();
 const categories = ["How-to", "Fiction", "Manga"] as const;
 const PAGE_SIZE = 8;
 
 const page = shallowRef(1);
 const category = shallowRef<string | undefined>(undefined);
-const borrowedSlugs = shallowRef<Set<string>>(new Set());
 
 const { data: rawPage, refresh } = await useFetch<{
   data: Record<string, unknown>[];
@@ -66,11 +67,24 @@ async function onBorrow(_slug: string, bookId: string) {
   }
   try {
     await $fetch(`/api/books/${bookId}/borrow`, { method: "POST" });
-    borrowedSlugs.value = new Set([...borrowedSlugs.value, _slug]);
+    store.addBorrowedSlug(_slug);
+    store.triggerBorrowRefresh();
     props.flash("Book borrowed for 14 days.");
     refresh();
   } catch (e: any) {
     props.flash(e?.data?.message || "Could not borrow the book.");
+  }
+}
+
+async function onReturn(_slug: string, bookId: string) {
+  try {
+    await $fetch(`/api/books/${bookId}/return`, { method: "POST" });
+    store.removeBorrowedSlug(_slug);
+    store.triggerBorrowRefresh();
+    props.flash("Book returned. Thank you!");
+    refresh();
+  } catch (e: any) {
+    props.flash(e?.data?.message || "Could not return the book.");
   }
 }
 
@@ -113,9 +127,10 @@ function onPageGo(p: number) {
         v-for="book in filtered"
         :key="book.id"
         :book="book"
-        :actions="stockActions(book, borrowedSlugs)"
+        :actions="stockActions(book, store.borrowedSlugs)"
         :flash="flash"
         @borrow="onBorrow(book.slug, book.id)"
+        @return="onReturn(book.slug, book.id)"
       />
     </div>
 

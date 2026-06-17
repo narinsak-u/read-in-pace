@@ -13,13 +13,17 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   borrow: [];
+  return: [];
 }>();
 
 const cart = useCartStore();
 
 function onBorrow() {
   emit("borrow");
-  props.flash(`${props.book.title} borrowed for 21 days.`);
+}
+
+function onReturn() {
+  emit("return");
 }
 
 function onBuy() {
@@ -55,7 +59,7 @@ function onBuy() {
     </div>
     <div class="mt-3 flex gap-1">
       <template v-if="actions.isBorrowed">
-        <Button size="sm" variant="archival" disabled>Returning</Button>
+        <Button size="sm" variant="archival" @click="onReturn">Return</Button>
       </template>
       <template v-else-if="actions.canBorrow">
         <Button size="sm" variant="archival" @click="onBorrow">Borrow</Button>

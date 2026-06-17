@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useAuthStore } from "~/stores/auth";
+import { useLibraryStore } from "~/stores/library";
 import { mapBookResponse, type Book } from "~/types/book";
 
 const props = defineProps<{
@@ -12,21 +13,11 @@ const emit = defineEmits<{
 }>();
 
 const auth = useAuthStore();
+const store = useLibraryStore();
 
-// --- Trending ---
-const trendingBooks = ref<Book[]>([]);
-const trendingLoaded = shallowRef(false);
-
-async function fetchTrending() {
-  try {
-    const raw = await $fetch<Record<string, unknown>[]>("/api/books/trending");
-    trendingBooks.value = raw.map(mapBookResponse);
-  } catch {
-    trendingBooks.value = [];
-  } finally {
-    trendingLoaded.value = true;
-  }
-}
+// --- Trending (uses store cache) ---
+const trendingBooks = computed(() => store.trendingBooks);
+const trendingLoaded = computed(() => store.trendingLoaded);
 
 // --- Loans ---
 interface BorrowItem {
@@ -61,7 +52,7 @@ const allBorrows = ref<BorrowItem[]>([]);
 const borrowsPage = shallowRef(1);
 const borrowsMeta = shallowRef<BorrowsResponse['meta'] | null>(null);
 const borrowError = shallowRef<unknown>(null);
-const loansLoaded = shallowRef(false);
+const loansLoaded = shallowRef(true);
 
 const hasMore = computed(() => {
   if (!borrowsMeta.value) return false;
@@ -74,6 +65,7 @@ async function fetchBorrows(page = 1, append = false) {
     loansLoaded.value = true;
     return;
   }
+  loansLoaded.value = false;
   try {
     const res = await $fetch<BorrowsResponse>('/api/user/borrows', {
       query: { page, limit: LIMIT },
@@ -134,7 +126,10 @@ async function borrowBook(bookId: string) {
   try {
     await $fetch(`/api/books/${bookId}/borrow`, { method: "POST" });
     props.flash("Book borrowed for 14 days.");
-    await Promise.all([fetchBorrows(1), fetchTrending()]);
+    await fetchBorrows(1);
+    store.setBorrowedSlugs(allBorrows.value.map((l) => l.bookSlug));
+    store.triggerBorrowRefresh();
+    await store.fetchTrending(true);
   } catch (e: any) {
     if (e?.status === 401) {
       auth.openAuthModal();
@@ -150,7 +145,10 @@ async function returnBook(bookId: string, title: string) {
   try {
     await $fetch(`/api/books/${bookId}/return`, { method: "POST" });
     props.flash(`${title} returned. Thank you!`);
-    await Promise.all([fetchBorrows(1), fetchTrending()]);
+    await fetchBorrows(1);
+    store.setBorrowedSlugs(allBorrows.value.map((l) => l.bookSlug));
+    store.triggerBorrowRefresh();
+    await store.fetchTrending(true);
   } catch (e: any) {
     props.flash(e?.data?.message || "Could not return the book.");
   }
@@ -165,13 +163,22 @@ function onBorrow(_slug: string, bookId: string) {
 }
 
 if (props.mode === "trending") {
-  fetchTrending();
+  store.fetchTrending();
 } else {
   fetchBorrows(1);
   watch(() => auth.signedIn, (val) => {
     if (val) fetchBorrows(1);
   });
 }
+
+// Re-fetch when external borrow/return happens (from NewArrivals, etc.)
+watch(() => store.borrowRefreshKey, () => {
+  if (props.mode === "loans") {
+    fetchBorrows(1);
+  } else {
+    store.fetchTrending(true);
+  }
+});
 </script>
 
 <template>
@@ -205,6 +212,7 @@ if (props.mode === "trending") {
         :borrowed-slugs="userBorrowedSlugs"
         :flash="flash"
         @borrow="(slug, bookId) => onBorrow(slug, bookId)"
+        @return="(slug, bookId) => { const book = trendingBooks.find(b => b.id === bookId || b.slug === slug); returnBook(bookId, book?.title ?? 'Book'); }"
       />
     </template>
 

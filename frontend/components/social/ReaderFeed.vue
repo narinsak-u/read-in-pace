@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Button } from "~/components/ui/button";
 import { ArrowRight } from "lucide-vue-next";
+import { useLibraryStore } from "~/stores/library";
 
 interface CommentUser {
   id: string;
@@ -24,6 +25,7 @@ const props = defineProps<{
 
 provide("flash", props.flash);
 
+const store = useLibraryStore();
 const comments = ref<FeedComment[]>([]);
 const bookSlug = shallowRef("");
 const bookLikeCount = shallowRef(0);
@@ -43,9 +45,8 @@ function timeAgo(dateStr: string): string {
 
 async function fetchFeed() {
   try {
-    const trending = await $fetch<{ id: string; slug: string; likeCount: number }[]>(
-      "/api/books/trending",
-    );
+    await store.fetchTrending();
+    const trending = store.trendingBooks;
     if (trending.length === 0) return;
     const first = trending[0];
     bookSlug.value = first.slug;
