@@ -1,7 +1,7 @@
-import { defineStore } from "pinia";
-import { shallowRef, computed, watch } from "vue";
-import { mapBookResponse, type Book } from "~/types/book";
-import { useAuthStore } from "~/stores/auth";
+import { defineStore } from 'pinia';
+import { shallowRef, computed, watch } from 'vue';
+import { mapBookResponse, type Book } from '~/types/book';
+import { useAuthStore } from '~/stores/auth';
 
 export interface BorrowItem {
   borrowId: string;
@@ -31,7 +31,7 @@ export interface BorrowsResponse {
 }
 
 function mapBorrowResponse(
-  entry: BorrowsResponse["data"][number],
+  entry: BorrowsResponse['data'][number],
 ): BorrowItem {
   return {
     borrowId: entry.borrow.id as string,
@@ -41,19 +41,19 @@ function mapBorrowResponse(
     author: entry.book.author as string,
     cover: entry.book.cover as string,
     crop: (entry.book.crop as number | null) ?? null,
-    shelf: (entry.book.shelf as string) ?? "GEN",
-    category: (entry.book.category as string) ?? "",
+    shelf: (entry.book.shelf as string) ?? 'GEN',
+    category: (entry.book.category as string) ?? '',
     dueAt: entry.borrow.dueAt as string,
     currentPage: entry.borrow.currentPage as number,
     totalPages: entry.borrow.totalPages as number,
-    price: String(entry.book.price ?? "0"),
+    price: String(entry.book.price ?? '0'),
     inStock: (entry.book.inStock as number) ?? 0,
     avgRating: Number(entry.book.avgRating ?? 0),
     ratingsCount: (entry.book.ratingsCount as number) ?? 0,
   };
 }
 
-export const useLibraryStore = defineStore("library", () => {
+export const useLibraryStore = defineStore('library', () => {
   const auth = useAuthStore();
 
   // --- Shared borrowed slugs ---
@@ -89,7 +89,7 @@ export const useLibraryStore = defineStore("library", () => {
     }
     try {
       const raw = await $fetch<Record<string, unknown>[]>(
-        "/api/books/trending",
+        '/api/books/trending',
       );
       trendingBooks.value = raw.map(mapBookResponse);
     } catch {
@@ -100,19 +100,58 @@ export const useLibraryStore = defineStore("library", () => {
     }
   }
 
+  // --- Borrows state (shared, avoids per-component fetch duplication) ---
+  const borrows = shallowRef<BorrowItem[]>([]);
+  const borrowsPage = shallowRef(1);
+  const borrowsMeta = shallowRef<{
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  } | null>(null);
+  const borrowsLoaded = shallowRef(false);
+  const borrowError = shallowRef<unknown>(null);
+
+  const hasMoreBorrows = computed(() => {
+    if (!borrowsMeta.value) return false;
+    return borrowsPage.value < borrowsMeta.value.totalPages;
+  });
+
+  async function fetchBorrows(page = 1, append = false) {
+    if (!auth.signedIn) {
+      borrows.value = [];
+      borrowsLoaded.value = true;
+      borrowError.value = null;
+      return;
+    }
+    borrowsLoaded.value = false;
+    try {
+      const res = await $fetch<BorrowsResponse>('/api/user/borrows', {
+        query: { page, limit: 3 },
+      });
+      const items = res.data.map(mapBorrowResponse);
+      borrows.value = append ? [...borrows.value, ...items] : items;
+      borrowsPage.value = page;
+      borrowsMeta.value = res.meta;
+      borrowError.value = null;
+    } catch (e) {
+      if (!append) borrows.value = [];
+      borrowError.value = e;
+    } finally {
+      borrowsLoaded.value = true;
+    }
+  }
+
+  function loadMoreBorrows() {
+    if (!hasMoreBorrows.value) return;
+    fetchBorrows(borrowsPage.value + 1, true);
+  }
+
   // --- Refresh key — components watch this to know when to re-fetch ---
   const borrowRefreshKey = shallowRef(0);
 
   function triggerBorrowRefresh() {
     borrowRefreshKey.value++;
-  }
-
-  // --- Fetch borrows with pagination (shared mapping) ---
-  async function fetchBorrows(page = 1, limit = 10) {
-    const res = await $fetch<BorrowsResponse>("/api/user/borrows", {
-      query: { page, limit },
-    });
-    return { items: res.data.map(mapBorrowResponse), meta: res.meta };
   }
 
   // --- Init: auto-fetch borrowed slugs when signed in ---
@@ -122,8 +161,12 @@ export const useLibraryStore = defineStore("library", () => {
       return;
     }
     try {
-      const { items } = await fetchBorrows(1, 100);
-      setBorrowedSlugs(items.map((b) => b.bookSlug));
+      const res = await $fetch<BorrowsResponse>('/api/user/borrows', {
+        query: { page: 1, limit: 100 },
+      });
+      setBorrowedSlugs(
+        res.data.map((b) => (b.book.slug as string) ?? (b.book.id as string)),
+      );
     } catch {
       borrowedSlugs.value = new Set();
     }
@@ -136,6 +179,8 @@ export const useLibraryStore = defineStore("library", () => {
         initBorrowedSlugs();
       } else {
         borrowedSlugs.value = new Set();
+        borrows.value = [];
+        borrowsLoaded.value = true;
       }
     },
     { immediate: true },
@@ -149,9 +194,15 @@ export const useLibraryStore = defineStore("library", () => {
     trendingBooks: readonly(trendingBooks),
     trendingLoaded: readonly(trendingLoaded),
     fetchTrending,
+    borrows: readonly(borrows),
+    borrowsPage: readonly(borrowsPage),
+    borrowsMeta: readonly(borrowsMeta),
+    borrowsLoaded: readonly(borrowsLoaded),
+    borrowError: readonly(borrowError),
+    hasMoreBorrows,
+    fetchBorrows,
+    loadMoreBorrows,
     borrowRefreshKey: readonly(borrowRefreshKey),
     triggerBorrowRefresh,
-    fetchBorrows,
-    initBorrowedSlugs,
   };
 });

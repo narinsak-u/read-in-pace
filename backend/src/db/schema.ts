@@ -122,6 +122,9 @@ export const comments = pgTable('comments', {
   userId: text('user_id')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
+  parentId: text('parent_id').references((): any => comments.id, {
+    onDelete: 'cascade',
+  }),
   text: text('text').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
@@ -129,6 +132,20 @@ export const comments = pgTable('comments', {
     .defaultNow()
     .$onUpdate(() => new Date()),
 });
+
+export const commentLikes = pgTable(
+  'comment_likes',
+  {
+    commentId: text('comment_id')
+      .notNull()
+      .references(() => comments.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.commentId, table.userId] })],
+);
 
 export const ratings = pgTable(
   'ratings',
