@@ -359,7 +359,8 @@ async function seed() {
 
       const text =
         commentTexts[Math.floor(Math.random() * commentTexts.length)];
-      await db.insert(schema.comments).values({ bookId, userId, text });
+      const rating = 3 + Math.floor(Math.random() * 3);
+      await db.insert(schema.comments).values({ bookId, userId, text, rating });
       commentCount++;
     }
   }

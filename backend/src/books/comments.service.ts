@@ -23,6 +23,7 @@ export class CommentsService {
         userId: schema.comments.userId,
         parentId: schema.comments.parentId,
         text: schema.comments.text,
+        rating: schema.comments.rating,
         createdAt: schema.comments.createdAt,
         updatedAt: schema.comments.updatedAt,
         user: {
@@ -92,6 +93,10 @@ export class CommentsService {
         );
     }
 
+    if (dto.rating !== undefined && dto.parentId) {
+      throw new BadRequestException('Replies cannot include a rating');
+    }
+
     const [comment] = await this.db
       .insert(schema.comments)
       .values({
@@ -99,10 +104,41 @@ export class CommentsService {
         userId,
         text: dto.text,
         parentId: dto.parentId ?? null,
+        rating: dto.rating ?? null,
       })
       .returning();
 
-    return comment;
+    if (dto.rating !== undefined) {
+      await this.db
+        .insert(schema.ratings)
+        .values({ bookId, userId, rating: dto.rating })
+        .onConflictDoUpdate({
+          target: [schema.ratings.bookId, schema.ratings.userId],
+          set: { rating: dto.rating },
+        });
+    }
+
+    const [withUser] = await this.db
+      .select({
+        id: schema.comments.id,
+        bookId: schema.comments.bookId,
+        userId: schema.comments.userId,
+        parentId: schema.comments.parentId,
+        text: schema.comments.text,
+        rating: schema.comments.rating,
+        createdAt: schema.comments.createdAt,
+        updatedAt: schema.comments.updatedAt,
+        user: {
+          id: schema.user.id,
+          name: schema.user.name,
+          image: schema.user.image,
+        },
+      })
+      .from(schema.comments)
+      .innerJoin(schema.user, eq(schema.comments.userId, schema.user.id))
+      .where(eq(schema.comments.id, comment.id));
+
+    return { ...withUser, likeCount: 0, likedByUser: false };
   }
 
   async remove(commentId: string, userId: string) {

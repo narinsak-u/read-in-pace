@@ -126,6 +126,7 @@ export const comments = pgTable('comments', {
     onDelete: 'cascade',
   }),
   text: text('text').notNull(),
+  rating: integer('rating'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
     .notNull()

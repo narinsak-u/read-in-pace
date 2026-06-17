@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Button } from '~/components/ui/button';
+import { useAuthStore } from '~/stores/auth';
 
 interface CommentUser {
   id: string;
@@ -11,10 +12,15 @@ interface ApiComment {
   id: string;
   bookId: string;
   userId: string;
+  parentId: string | null;
   text: string;
+  rating: number | null;
   createdAt: string;
   updatedAt: string;
+  likeCount: number;
+  likedByUser: boolean;
   user: CommentUser;
+  replies?: ApiComment[];
 }
 
 interface Review {
@@ -33,8 +39,12 @@ const { flash, bookId } = defineProps<{
   bookId: string;
 }>();
 
+const auth = useAuthStore();
+
 const reviews = ref<Review[]>([]);
 const loaded = shallowRef(false);
+const submitting = shallowRef(false);
+const replyingSubmitId = shallowRef<string | null>(null);
 
 function getInitials(name: string): string {
   return name.toUpperCase().slice(0, 2);
@@ -58,10 +68,12 @@ function mapCommentToReview(comment: ApiComment): Review {
     initials: getInitials(comment.user.name),
     name: comment.user.name,
     time: timeAgo(comment.createdAt),
-    rating: 0,
+    rating: comment.rating ?? 0,
     text: comment.text,
-    likes: 0,
-    replies: [],
+    likes: comment.likeCount ?? 0,
+    replies: (comment.replies ?? []).map(
+      (r) => `${r.text} — ${r.user.name}`,
+    ),
   };
 }
 
@@ -82,28 +94,72 @@ const rating = shallowRef(0);
 const reviewText = shallowRef('');
 const replyingTo = shallowRef<string | null>(null);
 
-function publishReview() {
+async function publishReview() {
   if (!rating.value || !reviewText.value.trim()) return;
-  reviews.value.unshift({
-    id: crypto.randomUUID(),
-    initials: 'JS',
-    name: 'Jamie S.',
-    time: 'Just now',
-    rating: rating.value,
-    text: reviewText.value.trim(),
-    likes: 0,
-    replies: [],
-  });
-  rating.value = 0;
-  reviewText.value = '';
-  flash('Your review is now part of the discussion.');
+
+  if (!auth.signedIn) {
+    auth.openAuthModal(() => {
+      void publishReview();
+    });
+    return;
+  }
+
+  submitting.value = true;
+  try {
+    await $fetch<ApiComment>(`/api/books/${bookId}/comments`, {
+      method: 'POST',
+      body: { text: reviewText.value.trim(), rating: rating.value },
+    });
+    await fetchComments();
+    rating.value = 0;
+    reviewText.value = '';
+    flash('Your review is now part of the discussion.');
+  } catch (e: any) {
+    if (e?.status === 401) {
+      auth.openAuthModal(() => {
+        void publishReview();
+      });
+    } else if (e?.data?.message) {
+      flash(e.data.message);
+    } else {
+      flash('Could not publish your review. Please try again.');
+    }
+  } finally {
+    submitting.value = false;
+  }
 }
 
-function publishReply(reviewId: string, text: string) {
-  reviews.value = reviews.value.map((r) =>
-    r.id === reviewId ? { ...r, replies: [...r.replies, `${text} — Jamie S.`] } : r,
-  );
-  replyingTo.value = null;
+async function publishReply(reviewId: string, text: string) {
+  if (!text.trim()) return;
+
+  if (!auth.signedIn) {
+    auth.openAuthModal(() => {
+      void publishReply(reviewId, text);
+    });
+    return;
+  }
+
+  replyingSubmitId.value = reviewId;
+  try {
+    await $fetch<ApiComment>(`/api/books/${bookId}/comments`, {
+      method: 'POST',
+      body: { text, parentId: reviewId },
+    });
+    await fetchComments();
+    replyingTo.value = null;
+  } catch (e: any) {
+    if (e?.status === 401) {
+      auth.openAuthModal(() => {
+        void publishReply(reviewId, text);
+      });
+    } else if (e?.data?.message) {
+      flash(e.data.message);
+    } else {
+      flash('Could not post your reply. Please try again.');
+    }
+  } finally {
+    replyingSubmitId.value = null;
+  }
 }
 </script>
 
@@ -124,6 +180,7 @@ function publishReply(reviewId: string, text: string) {
             :key="item.id"
             :review="item"
             :is-replying="replyingTo === item.id"
+            :reply-submitting="replyingSubmitId === item.id"
             @like="item.likes++"
             @reply="replyingTo = replyingTo === item.id ? null : item.id"
             @publish-reply="(text: string) => publishReply(item.id, text)"
@@ -136,6 +193,7 @@ function publishReply(reviewId: string, text: string) {
         :rating="rating"
         :review-text="reviewText"
         :flash="flash"
+        :submitting="submitting"
         @update:rating="rating = $event"
         @update:review-text="reviewText = $event"
         @publish="publishReview"

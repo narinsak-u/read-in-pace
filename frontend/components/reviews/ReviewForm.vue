@@ -5,6 +5,7 @@ defineProps<{
   rating: number;
   reviewText: string;
   flash: (message: string) => void;
+  submitting?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -29,7 +30,7 @@ const emit = defineEmits<{
         class="w-full resize-none rounded-sm border border-border bg-card p-3 text-sm focus:ring-1 focus:ring-ring"
         @input="emit('update:reviewText', ($event.target as HTMLTextAreaElement).value)"
       />
-      <Button class="mt-4 w-full" variant="archival" :disabled="!rating || !reviewText.trim()" @click="emit('publish')">
+      <Button class="mt-4 w-full" variant="archival" :disabled="!rating || !reviewText.trim() || submitting" @click="emit('publish')">
         Publish review
       </Button>
     </div>

@@ -15,6 +15,7 @@ interface Review {
 defineProps<{
   review: Review;
   isReplying: boolean;
+  replySubmitting?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -42,13 +43,14 @@ const replyText = shallowRef("");
             review.time
           }}</span>
           <span
+            v-if="review.rating > 0"
             class="ml-auto text-sm text-primary"
             :aria-label="`${review.rating} out of 5 stars`"
           >
-            {{ "★".repeat(review.rating)
-            }}<span class="text-foreground/10">{{
-              "★".repeat(5 - review.rating)
-            }}</span>
+            {{ "★".repeat(review.rating) }}
+            <span class="text-foreground/10">
+              {{ "★".repeat(5 - review.rating) }}
+            </span>
           </span>
         </div>
         <p class="mt-3 max-w-3xl leading-7 text-foreground/80 text-sm">
@@ -91,7 +93,7 @@ const replyText = shallowRef("");
             <Button
               size="sm"
               variant="archival"
-              :disabled="!replyText.trim()"
+              :disabled="!replyText.trim() || replySubmitting"
               @click="
                 emit('publish-reply', replyText.trim());
                 replyText = '';

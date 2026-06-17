@@ -2,11 +2,23 @@
 import { Button } from "~/components/ui/button";
 import { ArrowRight } from "lucide-vue-next";
 import { useLibraryStore } from "~/stores/library";
+import { useAuthStore } from "~/stores/auth";
 
 interface CommentUser {
   id: string;
   name: string;
   image: string | null;
+}
+
+interface FeedReply {
+  id: string;
+  bookId: string;
+  userId: string;
+  parentId: string | null;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+  user: CommentUser;
 }
 
 interface FeedComment {
@@ -17,6 +29,7 @@ interface FeedComment {
   createdAt: string;
   updatedAt: string;
   user: CommentUser;
+  replies?: FeedReply[];
 }
 
 const props = defineProps<{
@@ -26,10 +39,25 @@ const props = defineProps<{
 provide("flash", props.flash);
 
 const store = useLibraryStore();
+const auth = useAuthStore();
 const comments = ref<FeedComment[]>([]);
+const bookId = shallowRef("");
 const bookSlug = shallowRef("");
 const bookLikeCount = shallowRef(0);
 const loaded = shallowRef(false);
+const replySubmittingId = shallowRef<string | null>(null);
+
+const FEED_COMMENT_LIMIT = 3;
+const visibleComments = computed<FeedComment[]>(() =>
+  comments.value.slice(0, FEED_COMMENT_LIMIT),
+);
+
+function repliesFor(comment: FeedComment): { name: string; text: string }[] {
+  return (comment.replies ?? []).map((r) => ({
+    name: r.user.name,
+    text: r.text,
+  }));
+}
 
 function timeAgo(dateStr: string): string {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
@@ -49,10 +77,10 @@ async function fetchFeed() {
     const trending = store.trendingBooks;
     if (trending.length === 0) return;
     const first = trending[0];
+    bookId.value = first.id;
     bookSlug.value = first.slug;
     bookLikeCount.value = first.likeCount;
-    const data = await $fetch<FeedComment[]>(`/api/books/${first.id}/comments`);
-    comments.value = data;
+    await fetchComments();
   } catch {
     comments.value = [];
   } finally {
@@ -60,7 +88,53 @@ async function fetchFeed() {
   }
 }
 
+async function fetchComments() {
+  if (!bookId.value) return;
+  const data = await $fetch<FeedComment[]>(
+    `/api/books/${bookId.value}/comments`,
+  );
+  comments.value = data;
+}
+
 onMounted(fetchFeed);
+
+async function publishReply(
+  parentId: string,
+  text: string,
+): Promise<boolean> {
+  if (!text.trim() || !bookId.value) return false;
+
+  if (!auth.signedIn) {
+    auth.openAuthModal(() => {
+      void publishReply(parentId, text);
+    });
+    return false;
+  }
+
+  replySubmittingId.value = parentId;
+  try {
+    await $fetch(`/api/books/${bookId.value}/comments`, {
+      method: "POST",
+      body: { text: text.trim(), parentId },
+    });
+    await fetchComments();
+    props.flash("Reply posted.");
+    return true;
+  } catch (e: any) {
+    if (e?.status === 401) {
+      auth.openAuthModal(() => {
+        void publishReply(parentId, text);
+      });
+    } else if (e?.data?.message) {
+      props.flash(e.data.message);
+    } else {
+      props.flash("Could not post your reply. Please try again.");
+    }
+    return false;
+  } finally {
+    replySubmittingId.value = null;
+  }
+}
 </script>
 
 <template>
@@ -88,12 +162,15 @@ onMounted(fetchFeed);
     </div>
     <div v-else class="space-y-6">
       <FeedPost
-        v-for="comment in comments"
+        v-for="comment in visibleComments"
         :key="comment.id"
         :initials="comment.user.name.toUpperCase().slice(0, 2)"
         :name="comment.user.name"
         :time="timeAgo(comment.createdAt)"
         :like-count="bookLikeCount"
+        :replies="repliesFor(comment)"
+        :submitting="replySubmittingId === comment.id"
+        :submit-reply="(text: string) => publishReply(comment.id, text)"
       >
         {{ comment.text }}
       </FeedPost>

@@ -1,29 +1,80 @@
 <script setup lang="ts">
 import { MessageCircle } from "lucide-vue-next";
 import { Button } from "~/components/ui/button";
+import { useAuthStore } from "~/stores/auth";
+
+interface Reply {
+  name: string;
+  text: string;
+  pending?: boolean;
+}
 
 const props = defineProps<{
   initials: string;
   name: string;
   time: string;
   likeCount: number;
+  submitting?: boolean;
+  replies?: Reply[];
+  submitReply: (text: string) => Promise<boolean>;
 }>();
 
+const auth = useAuthStore();
 const replyOpen = shallowRef(false);
 const replyText = shallowRef("");
 const liked = shallowRef(false);
 const localLikeCount = shallowRef(props.likeCount);
-const flashProp = inject<(msg: string) => void>("flash")!;
+const showAllReplies = shallowRef(false);
+const optimisticReplies = ref<Reply[]>([]);
+
+const mergedReplies = computed<Reply[]>(() => [
+  ...(props.replies ?? []),
+  ...optimisticReplies.value,
+]);
+
+const visibleReplies = computed<Reply[]>(() => {
+  const list = mergedReplies.value;
+  if (showAllReplies.value || list.length <= 2) return list;
+  return list.slice(0, 2);
+});
+
+const hiddenReplyCount = computed<number>(() => {
+  const list = mergedReplies.value;
+  if (showAllReplies.value || list.length <= 2) return 0;
+  return list.length - 2;
+});
+
+watch(
+  () => (props.replies ?? []).length,
+  (newLen, oldLen) => {
+    if (newLen > oldLen) {
+      optimisticReplies.value = [];
+    }
+  },
+);
 
 function toggleLike() {
   liked.value = !liked.value;
   localLikeCount.value += liked.value ? 1 : -1;
 }
 
-function postReply() {
-  replyOpen.value = false;
+async function postReply() {
+  if (!replyText.value.trim() || props.submitting) return;
+  const text = replyText.value.trim();
+  const authorName = auth.user?.name ?? "You";
+  const optimistic: Reply = { name: authorName, text, pending: true };
+  optimisticReplies.value = [...optimisticReplies.value, optimistic];
   replyText.value = "";
-  flashProp("Reply posted.");
+
+  const success = await props.submitReply(text);
+
+  if (success) {
+    replyOpen.value = false;
+  } else {
+    optimisticReplies.value = optimisticReplies.value.filter(
+      (r) => r !== optimistic,
+    );
+  }
 }
 </script>
 
@@ -43,6 +94,7 @@ function postReply() {
     <p class="text-sm leading-snug text-foreground/80">
       <slot />
     </p>
+
     <div class="mt-2 flex items-center gap-3">
       <div class="w-full">
         <div class="flex">
@@ -51,7 +103,11 @@ function postReply() {
             size="sm"
             @click="replyOpen = !replyOpen"
           >
-            <MessageCircle /> Reply
+            <MessageCircle />
+            Reply
+            <span v-if="mergedReplies.length > 0">
+              ({{ mergedReplies.length }})
+            </span>
           </Button>
           <Button
             variant="archivalGhost"
@@ -66,11 +122,44 @@ function postReply() {
 
         <!-- Reply input -->
         <div v-if="replyOpen" class="mt-2">
+          <!-- items -->
+          <div
+            v-if="replies && replies.length > 0"
+            class="mt-2 space-y-1 border-l border-primary/20 pl-3"
+          >
+            <p
+              v-for="(reply, i) in visibleReplies"
+              :key="i"
+              class="text-xs leading-snug text-muted-foreground"
+              :class="reply.pending ? 'opacity-60' : ''"
+            >
+              <span class="ml-1 text-foreground/70">
+                {{ `${reply.text} — ${reply.name}` }}
+              </span>
+              <span
+                v-if="reply.pending"
+                class="ml-1 font-mono text-[10px] text-muted-foreground"
+              >
+                sending…
+              </span>
+            </p>
+            <button
+              v-if="hiddenReplyCount > 0"
+              type="button"
+              class="font-mono text-[10px] text-primary hover:underline"
+              @click="showAllReplies = true"
+            >
+              Show {{ hiddenReplyCount }} more
+              {{ hiddenReplyCount === 1 ? "reply" : "replies" }}
+            </button>
+          </div>
+
+          <!-- input -->
           <textarea
             v-model="replyText"
             rows="2"
             placeholder="Write your reply..."
-            class="w-full resize-none rounded-sm border border-border bg-card p-2 text-xs focus:ring-1 focus:ring-ring"
+            class="w-full mt-2 resize-none rounded-sm border border-border bg-card p-2 text-xs focus:ring-1 focus:ring-ring"
           />
           <div class="mt-1 flex justify-end gap-1">
             <Button
@@ -86,7 +175,7 @@ function postReply() {
             <Button
               size="sm"
               variant="archival"
-              :disabled="!replyText.trim()"
+              :disabled="!replyText.trim() || submitting"
               @click="postReply"
             >
               Post
