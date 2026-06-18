@@ -1,16 +1,23 @@
 import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { Logger as PinoNestLogger } from 'nestjs-pino';
 import { AppModule } from './app.module';
-import { auth } from './auth/better-auth';
+import { AUTH } from './auth/better-auth';
 import { toNodeHandler } from 'better-auth/node';
+import { ConfigService } from './config/config.provider';
+import { AllExceptionsFilter } from './shared/errors/all-exceptions.filter';
 import type { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+  });
+  app.useLogger(app.get(PinoNestLogger));
+  const config = app.get(ConfigService);
 
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: [...config.server.corsOrigins],
     credentials: true,
   });
 
@@ -23,13 +30,22 @@ async function bootstrap() {
     }),
   );
 
-  const authHandler = toNodeHandler(auth);
+  app.useGlobalFilters(
+    new AllExceptionsFilter(app.get('LOGGER_PORT' as never)),
+  );
+
+  const authHandler = toNodeHandler(app.get(AUTH));
   app.use('/api/auth', (req: Request, res: Response, next: NextFunction) => {
     void authHandler(req, res).catch(next);
   });
 
-  await app.listen(4000);
-  console.log('Backend running on http://localhost:4000');
+  await app.listen(config.server.port);
+  app
+    .get(PinoNestLogger)
+    .log(
+      `Backend running on http://localhost:${config.server.port}`,
+      'Bootstrap',
+    );
 }
 
 bootstrap().catch((err) => {

@@ -1,51 +1,17 @@
-// Business logic for book likes: check if liked and toggle (add/remove) with count return.
-// Uses a single upsert-style pattern: delete if exists, insert if not.
-import { Injectable, Inject } from '@nestjs/common';
-import { DRIZZLE } from '../db/db.module';
-import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import * as schema from '../db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+// Business logic for book likes: check and toggle with count return.
+import { Inject, Injectable } from '@nestjs/common';
+import { LIKE_REPO, type LikeRepository } from '../repositories/tokens';
 
 @Injectable()
 export class LikesService {
-  constructor(@Inject(DRIZZLE) private db: NodePgDatabase<typeof schema>) {}
+  constructor(@Inject(LIKE_REPO) private readonly likes: LikeRepository) {}
 
   async check(bookId: string, userId: string) {
-    const existing = await this.db
-      .select()
-      .from(schema.likes)
-      .where(
-        and(eq(schema.likes.bookId, bookId), eq(schema.likes.userId, userId)),
-      );
-    return { liked: existing.length > 0 };
+    const liked = await this.likes.isLikedBy(bookId, userId);
+    return { liked };
   }
 
-  async toggle(bookId: string, userId: string) {
-    const existing = await this.db
-      .select()
-      .from(schema.likes)
-      .where(
-        and(eq(schema.likes.bookId, bookId), eq(schema.likes.userId, userId)),
-      );
-
-    if (existing.length > 0) {
-      await this.db
-        .delete(schema.likes)
-        .where(
-          and(eq(schema.likes.bookId, bookId), eq(schema.likes.userId, userId)),
-        );
-    } else {
-      await this.db.insert(schema.likes).values({ bookId, userId });
-    }
-
-    const [{ count: likeCount }] = await this.db
-      .select({ count: sql<number>`COUNT(*)` })
-      .from(schema.likes)
-      .where(eq(schema.likes.bookId, bookId));
-
-    return {
-      liked: existing.length === 0,
-      likeCount: Number(likeCount),
-    };
+  toggle(bookId: string, userId: string) {
+    return this.likes.toggle(bookId, userId);
   }
 }

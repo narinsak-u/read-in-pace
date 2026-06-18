@@ -3,6 +3,9 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ConfigModule } from './config/config.module';
+import { SharedModule } from './shared/shared.module';
+import { RepositoriesModule } from './repositories/repositories.module';
 import { AuthModule } from './auth/auth.module';
 import { DbModule } from './db/db.module';
 import { BooksModule } from './books/books.module';
@@ -12,6 +15,9 @@ import { SocialModule } from './social/social.module';
 
 @Module({
   imports: [
+    ConfigModule,
+    SharedModule,
+    RepositoriesModule,
     AuthModule,
     DbModule,
     BooksModule,

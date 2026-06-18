@@ -1,6 +1,7 @@
 // REST controller for books CRUD at /api/books.
 // Public endpoints: findAll (paginated, filterable by category), findOne, getTrending.
-// Auth-protected: create, update, delete (owner-only via CurrentUser).
+// Auth-protected: create, update, delete. Update/delete additionally require
+// @Policies(ownership check).
 import {
   Controller,
   Get,
@@ -14,6 +15,9 @@ import {
 } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { PoliciesGuard } from '../auth/policies/policies.guard';
+import { Policies } from '../auth/policies/policies.decorator';
+import { CAN_DELETE_BOOK, CAN_EDIT_BOOK } from '../auth/policies/policy.types';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
@@ -57,7 +61,8 @@ export class BooksController {
   }
 
   @Put(':id')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, PoliciesGuard)
+  @Policies(CAN_EDIT_BOOK)
   update(
     @Param('id') id: string,
     @Body() dto: UpdateBookDto,
@@ -67,7 +72,8 @@ export class BooksController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, PoliciesGuard)
+  @Policies(CAN_DELETE_BOOK)
   remove(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.booksService.remove(id, user.id);
   }

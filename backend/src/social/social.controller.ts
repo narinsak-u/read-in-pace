@@ -1,25 +1,16 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Param,
-  Body,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
 import { SocialService } from './social.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
-import type { Request } from 'express';
 
 @Controller('api/feed')
 export class SocialController {
   constructor(private readonly socialService: SocialService) {}
 
   @Get()
-  async getFeed(@Req() req: Request) {
-    const userId = (req as any)?.user?.id;
-    return this.socialService.getFeed(userId);
+  @UseGuards(AuthGuard)
+  async getFeed(@CurrentUser() user?: { id: string }) {
+    return this.socialService.getFeed(user?.id);
   }
 
   @Post()

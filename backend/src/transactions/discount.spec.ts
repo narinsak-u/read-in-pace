@@ -1,4 +1,4 @@
-import { applyDiscounts } from './transactions.service';
+import { applyDiscounts } from './pricing';
 
 describe('applyDiscounts', () => {
   it('applies 0% tier for 1 item', () => {

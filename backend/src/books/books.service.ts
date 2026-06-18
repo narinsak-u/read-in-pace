@@ -1,158 +1,71 @@
 // Business logic for books: CRUD, paginated listing, stock management, and trending.
-// Uses Drizzle ORM with computed subquery fields (likeCount, commentCount, avgRating).
-// Enforces ownership on update/delete. decrementStock is used by the purchase flow.
+// All Drizzle access goes through BookRepository and BookReadModel — the cross-table
+// meta-projection (with likeCount, commentCount, avgRating) lives in BookReadModel only.
 import {
-  Injectable,
   Inject,
+  Injectable,
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { DRIZZLE } from '../db/db.module';
-import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import * as schema from '../db/schema';
-import { desc, eq, sql, count, gt, and, or } from 'drizzle-orm';
-import { CreateBookDto } from './dto/create-book.dto';
-import { UpdateBookDto } from './dto/update-book.dto';
+import {
+  BOOK_REPO,
+  type BookRepository,
+  type NewBook,
+} from '../repositories/tokens';
+import { BOOK_READ_MODEL, type BookReadModel } from '../repositories/tokens';
+import type { CreateBookDto } from './dto/create-book.dto';
+import type { UpdateBookDto } from './dto/update-book.dto';
 
 @Injectable()
 export class BooksService {
-  constructor(@Inject(DRIZZLE) private db: NodePgDatabase<typeof schema>) {}
+  constructor(
+    @Inject(BOOK_REPO) private readonly books: BookRepository,
+    @Inject(BOOK_READ_MODEL) private readonly readModel: BookReadModel,
+  ) {}
 
-  private bookWithMeta = {
-    id: schema.books.id,
-    slug: schema.books.slug,
-    title: schema.books.title,
-    author: schema.books.author,
-    price: schema.books.price,
-    cover: schema.books.cover,
-    synopsis: schema.books.synopsis,
-    category: schema.books.category,
-    crop: schema.books.crop,
-    shelf: schema.books.shelf,
-    year: schema.books.year,
-    trending: schema.books.trending,
-    inStock: schema.books.inStock,
-    isAvailable: schema.books.isAvailable,
-    totalPages: schema.books.totalPages,
-    createdBy: schema.books.createdBy,
-    createdAt: schema.books.createdAt,
-    updatedAt: schema.books.updatedAt,
-    likeCount: sql<number>`(SELECT COUNT(*) FROM ${schema.likes} WHERE ${schema.likes.bookId} = ${schema.books.id})`,
-    commentCount: sql<number>`(SELECT COUNT(*) FROM ${schema.comments} WHERE ${schema.comments.bookId} = ${schema.books.id})`,
-    avgRating: sql<number>`COALESCE((SELECT AVG(${schema.ratings.rating}) FROM ${schema.ratings} WHERE ${schema.ratings.bookId} = ${schema.books.id}), 0)`,
-    ratingsCount: sql<number>`(SELECT COUNT(*) FROM ${schema.ratings} WHERE ${schema.ratings.bookId} = ${schema.books.id})`,
-  } as const;
-
-  private avgRatingOrderBy = desc(
-    sql`COALESCE((SELECT AVG(${schema.ratings.rating}) FROM ${schema.ratings} WHERE ${schema.ratings.bookId} = ${schema.books.id}), 0)`,
-  );
-
-  async findAll(page: number, limit: number, category?: string) {
-    const offset = (page - 1) * limit;
-    const where = category ? eq(schema.books.category, category) : undefined;
-
-    const data = await this.db
-      .select(this.bookWithMeta)
-      .from(schema.books)
-      .where(where)
-      .limit(limit)
-      .offset(offset)
-      .orderBy(desc(schema.books.createdAt));
-
-    const totalResult = await this.db
-      .select({ value: count() })
-      .from(schema.books)
-      .where(where);
-
-    const total = Number(totalResult[0].value);
-
-    return {
-      data,
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+  findAll(page: number, limit: number, category?: string) {
+    return this.readModel.findFullPaginated(page, limit, category);
   }
 
   async findOne(idOrSlug: string) {
-    const [book] = await this.db
-      .select(this.bookWithMeta)
-      .from(schema.books)
-      .where(
-        or(eq(schema.books.slug, idOrSlug), eq(schema.books.id, idOrSlug)),
-      );
-
+    const book = await this.readModel.findFullByIdOrSlug(idOrSlug);
     if (!book) throw new NotFoundException('Book not found');
     return book;
   }
 
-  async findNewArrivals() {
-    return this.db
-      .select(this.bookWithMeta)
-      .from(schema.books)
-      .limit(4)
-      .orderBy(desc(schema.books.createdAt));
+  findNewArrivals() {
+    return this.readModel.findNewArrivals(4);
   }
 
-  private async findOwner(id: string) {
-    const [book] = await this.db
-      .select({ createdBy: schema.books.createdBy })
-      .from(schema.books)
-      .where(eq(schema.books.id, id));
-    if (!book) throw new NotFoundException('Book not found');
-    return book.createdBy;
+  getTrending() {
+    return this.readModel.getTrending(3);
   }
 
   async create(data: CreateBookDto, userId: string) {
-    const [book] = await this.db
-      .insert(schema.books)
-      .values({
-        ...data,
-        totalPages: data.totalPages ?? 300,
-        createdBy: userId,
-      })
-      .returning();
-    return book;
+    return this.books.create(data as NewBook, userId);
   }
 
   async update(id: string, data: UpdateBookDto, userId: string) {
-    const owner = await this.findOwner(id);
+    const owner = await this.books.findOwner(id);
+    if (!owner) throw new NotFoundException('Book not found');
     if (owner !== userId) {
       throw new ForbiddenException('You can only edit your own books');
     }
-    const [updated] = await this.db
-      .update(schema.books)
-      .set(data)
-      .where(eq(schema.books.id, id))
-      .returning();
+    const updated = await this.books.update(id, data, userId);
+    if (!updated) throw new NotFoundException('Book not found');
     return updated;
   }
 
   async remove(id: string, userId: string) {
-    const owner = await this.findOwner(id);
+    const owner = await this.books.findOwner(id);
+    if (!owner) throw new NotFoundException('Book not found');
     if (owner !== userId) {
       throw new ForbiddenException('You can only delete your own books');
     }
-    await this.db.delete(schema.books).where(eq(schema.books.id, id));
+    await this.books.delete(id, userId);
   }
 
-  async decrementStock(id: string) {
-    const [updated] = await this.db
-      .update(schema.books)
-      .set({ inStock: sql`${schema.books.inStock} - 1` })
-      .where(and(eq(schema.books.id, id), gt(schema.books.inStock, 0)))
-      .returning();
-    return updated;
-  }
-
-  async getTrending() {
-    return this.db
-      .select(this.bookWithMeta)
-      .from(schema.books)
-      .orderBy(this.avgRatingOrderBy)
-      .limit(3);
+  decrementStock(id: string) {
+    return this.books.decrementStock(id);
   }
 }

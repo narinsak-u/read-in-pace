@@ -10,24 +10,30 @@ import {
   UseGuards,
   Body,
 } from '@nestjs/common';
-import { TransactionsService } from './transactions.service';
+import { BorrowsService } from './borrows.service';
+import { CheckoutService } from './checkout.service';
+import { PurchaseConfirmationService } from './purchase-confirmation.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 
 @Controller()
 export class TransactionsController {
-  constructor(private readonly transactionsService: TransactionsService) {}
+  constructor(
+    private readonly borrows: BorrowsService,
+    private readonly checkout: CheckoutService,
+    private readonly confirmation: PurchaseConfirmationService,
+  ) {}
 
   @Post('api/books/:id/borrow')
   @UseGuards(AuthGuard)
   borrow(@Param('id') id: string, @CurrentUser() user: { id: string }) {
-    return this.transactionsService.borrow(id, user.id);
+    return this.borrows.borrow(id, user.id);
   }
 
   @Post('api/books/:id/return')
   @UseGuards(AuthGuard)
   returnBook(@Param('id') id: string, @CurrentUser() user: { id: string }) {
-    return this.transactionsService.returnBook(id, user.id);
+    return this.borrows.returnBook(id, user.id);
   }
 
   @Post('api/books/:id/create-checkout-session')
@@ -36,7 +42,7 @@ export class TransactionsController {
     @Param('id') id: string,
     @CurrentUser() user: { id: string },
   ) {
-    return this.transactionsService.createCheckoutSession(id, user.id);
+    return this.checkout.forBook(id, user.id);
   }
 
   @Post('api/cart/checkout')
@@ -45,10 +51,7 @@ export class TransactionsController {
     @Body() body: { bookIds: string[] },
     @CurrentUser() user: { id: string },
   ) {
-    return this.transactionsService.createCartCheckoutSession(
-      body.bookIds,
-      user.id,
-    );
+    return this.checkout.forCart(body.bookIds, user.id);
   }
 
   @Post('api/confirm-purchase')
@@ -57,7 +60,7 @@ export class TransactionsController {
     @Query('session_id') sessionId: string,
     @CurrentUser() user: { id: string },
   ) {
-    return this.transactionsService.confirmPurchase(sessionId, user.id);
+    return this.confirmation.confirm(sessionId, user.id);
   }
 
   @Get('api/user/borrows')
@@ -67,7 +70,7 @@ export class TransactionsController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    return this.transactionsService.getUserBorrows(
+    return this.borrows.listForUser(
       user.id,
       page ? Number(page) : 1,
       limit ? Number(limit) : 3,
@@ -77,6 +80,6 @@ export class TransactionsController {
   @Get('api/user/purchases')
   @UseGuards(AuthGuard)
   myPurchases(@CurrentUser() user: { id: string }) {
-    return this.transactionsService.getUserPurchases(user.id);
+    return this.confirmation.listForUser(user.id);
   }
 }

@@ -10,6 +10,9 @@ import {
 import { CommentsService } from './comments.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { OptionalAuthGuard } from '../auth/optional-auth.guard';
+import { PoliciesGuard } from '../auth/policies/policies.guard';
+import { Policies } from '../auth/policies/policies.decorator';
+import { CAN_DELETE_COMMENT } from '../auth/policies/policy.types';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { OptionalUser } from '../auth/optional-user.decorator';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -35,7 +38,8 @@ export class CommentsController {
   }
 
   @Delete(':commentId')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, PoliciesGuard)
+  @Policies(CAN_DELETE_COMMENT)
   remove(
     @Param('commentId') commentId: string,
     @CurrentUser() user: { id: string },

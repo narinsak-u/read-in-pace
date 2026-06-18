@@ -1,10 +1,14 @@
-// NestJS module that registers and exports AuthGuard for use across the application.
-// Import this module wherever route protection via @UseGuards(AuthGuard) is needed.
-import { Module } from '@nestjs/common';
-import { AuthGuard } from './auth.guard';
+// NestJS module that wires the Better Auth provider (low-level instance) and the
+// AuthPort adapter (testable seam), plus the PoliciesModule for ownership checks.
+import { Global, Module } from '@nestjs/common';
+import { authProvider } from './better-auth';
+import { authPortProvider, BetterAuthAdapter } from './better-auth.adapter';
+import { PoliciesModule } from './policies/policies.module';
 
+@Global()
 @Module({
-  providers: [AuthGuard],
-  exports: [AuthGuard],
+  imports: [PoliciesModule],
+  providers: [authProvider, BetterAuthAdapter, authPortProvider],
+  exports: [authProvider, authPortProvider, PoliciesModule],
 })
 export class AuthModule {}

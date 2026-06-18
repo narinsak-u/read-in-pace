@@ -4,6 +4,9 @@ import { scrypt, randomBytes } from 'node:crypto';
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from './schema';
+import { ConfigService } from '../config/config.provider';
+
+const config = new ConfigService(process.env);
 
 async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16).toString('hex');
@@ -105,7 +108,7 @@ const commentTexts = [
 ];
 
 async function seed() {
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const pool = new Pool({ connectionString: config.db.url });
   const db = drizzle(pool, { schema });
 
   const passwordHash = await hashPassword('seed123');

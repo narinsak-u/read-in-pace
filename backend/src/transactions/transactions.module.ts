@@ -1,11 +1,19 @@
-// Module for borrow/purchase transactions. Registers the Stripe provider alongside the service and controller.
+// Module for borrow/purchase transactions. The work is split across three cohesive
+// services: BorrowsService, CheckoutService, PurchaseConfirmationService.
 import { Module } from '@nestjs/common';
 import { TransactionsController } from './transactions.controller';
-import { TransactionsService } from './transactions.service';
+import { BorrowsService } from './borrows.service';
+import { CheckoutService } from './checkout.service';
+import { PurchaseConfirmationService } from './purchase-confirmation.service';
 import { stripeProvider } from './stripe.provider';
 
 @Module({
   controllers: [TransactionsController],
-  providers: [TransactionsService, stripeProvider],
+  providers: [
+    BorrowsService,
+    CheckoutService,
+    PurchaseConfirmationService,
+    stripeProvider,
+  ],
 })
 export class TransactionsModule {}
