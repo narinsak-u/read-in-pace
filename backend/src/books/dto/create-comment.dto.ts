@@ -16,7 +16,7 @@ export class CreateCommentDto {
   @IsString()
   @MinLength(1)
   @MaxLength(2000)
-  text: string;
+  text!: string;
 
   @IsOptional()
   @IsString()

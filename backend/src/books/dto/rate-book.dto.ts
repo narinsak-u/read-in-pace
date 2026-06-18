@@ -7,5 +7,5 @@ export class RateBookDto {
   @Min(1)
   @Max(5)
   @Type(() => Number)
-  rating: number;
+  rating!: number;
 }

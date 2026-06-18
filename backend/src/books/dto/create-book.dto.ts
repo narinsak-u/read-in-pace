@@ -12,30 +12,30 @@ import { Type } from 'class-transformer';
 export class CreateBookDto {
   @IsString()
   @MaxLength(255)
-  slug: string;
+  slug!: string;
 
   @IsString()
   @MaxLength(255)
-  title: string;
+  title!: string;
 
   @IsString()
   @MaxLength(255)
-  author: string;
+  author!: string;
 
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   @Type(() => Number)
-  price: string;
+  price!: string;
 
   @IsString()
-  cover: string;
+  cover!: string;
 
   @IsString()
-  synopsis: string;
+  synopsis!: string;
 
   @IsString()
   @MaxLength(100)
-  category: string;
+  category!: string;
 
   @IsOptional()
   @IsNumber()
@@ -43,10 +43,10 @@ export class CreateBookDto {
 
   @IsString()
   @MaxLength(100)
-  shelf: string;
+  shelf!: string;
 
   @IsNumber()
-  year: number;
+  year!: number;
 
   @IsOptional()
   @IsBoolean()
