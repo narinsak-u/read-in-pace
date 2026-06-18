@@ -5,7 +5,6 @@ import {
   Inject,
   Injectable,
   NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
 import {
   BOOK_REPO,
@@ -46,23 +45,14 @@ export class BooksService {
   }
 
   async update(id: string, data: UpdateBookDto, userId: string) {
-    const owner = await this.books.findOwner(id);
-    if (!owner) throw new NotFoundException('Book not found');
-    if (owner !== userId) {
-      throw new ForbiddenException('You can only edit your own books');
-    }
     const updated = await this.books.update(id, data, userId);
     if (!updated) throw new NotFoundException('Book not found');
     return updated;
   }
 
   async remove(id: string, userId: string) {
-    const owner = await this.books.findOwner(id);
-    if (!owner) throw new NotFoundException('Book not found');
-    if (owner !== userId) {
-      throw new ForbiddenException('You can only delete your own books');
-    }
-    await this.books.delete(id, userId);
+    const deleted = await this.books.delete(id, userId);
+    if (!deleted) throw new NotFoundException('Book not found');
   }
 
   decrementStock(id: string) {
