@@ -9,10 +9,8 @@ import { and, eq, gt, sql } from 'drizzle-orm';
 import {
   BOOK_REPO,
   PURCHASE_REPO,
-  BOOK_READ_MODEL,
   type BookRepository,
   type PurchaseRepository,
-  type BookReadModel,
 } from '../repositories/tokens';
 import type StripeConstructor from 'stripe';
 
@@ -25,7 +23,6 @@ export class PurchaseConfirmationService {
     @Inject(STRIPE) private readonly stripe: StripeClient,
     @Inject(BOOK_REPO) private readonly books: BookRepository,
     @Inject(PURCHASE_REPO) private readonly purchases: PurchaseRepository,
-    @Inject(BOOK_READ_MODEL) private readonly readModel: BookReadModel,
   ) {}
 
   async confirm(sessionId: string, userId: string): Promise<unknown> {
@@ -90,7 +87,7 @@ export class PurchaseConfirmationService {
 
   async listForUser(userId: string) {
     const rows = await this.purchases.listForUser(userId);
-    const bookMap = await this.readModel.attachToPurchases(
+    const bookMap = await this.books.attachToPurchases(
       rows.map((r) => ({ bookId: r.bookId })),
     );
     return rows.flatMap(({ row, bookId }) => {

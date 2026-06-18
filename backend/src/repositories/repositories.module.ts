@@ -4,10 +4,6 @@ import {
   bookRepoProvider,
 } from './drizzle/drizzle-book.repository';
 import {
-  DrizzleBookReadModel,
-  bookReadModelProvider,
-} from './drizzle/drizzle-book-read.model';
-import {
   DrizzleCommentRepository,
   commentRepoProvider,
 } from './drizzle/drizzle-comment.repository';
@@ -40,7 +36,6 @@ import {
 @Module({
   providers: [
     DrizzleBookRepository,
-    DrizzleBookReadModel,
     DrizzleCommentRepository,
     DrizzleRatingRepository,
     DrizzleLikeRepository,
@@ -49,7 +44,6 @@ import {
     DrizzlePostRepository,
     DrizzleGoalRepository,
     bookRepoProvider,
-    bookReadModelProvider,
     commentRepoProvider,
     ratingRepoProvider,
     likeRepoProvider,
@@ -60,7 +54,6 @@ import {
   ],
   exports: [
     bookRepoProvider,
-    bookReadModelProvider,
     commentRepoProvider,
     ratingRepoProvider,
     likeRepoProvider,

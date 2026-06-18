@@ -13,11 +13,9 @@ import { and, eq, isNull, sql } from 'drizzle-orm';
 import {
   BOOK_REPO,
   BORROW_REPO,
-  BOOK_READ_MODEL,
   type BookRepository,
   type BorrowRepository,
   type BorrowRow,
-  type BookReadModel,
 } from '../repositories/tokens';
 import { buildPaginated, type Paginated } from '../repositories/paginated';
 
@@ -34,7 +32,6 @@ export class BorrowsService {
     @Inject(DRIZZLE) private readonly db: NodePgDatabase<typeof schema>,
     @Inject(BOOK_REPO) private readonly books: BookRepository,
     @Inject(BORROW_REPO) private readonly borrows: BorrowRepository,
-    @Inject(BOOK_READ_MODEL) private readonly readModel: BookReadModel,
   ) {}
 
   async borrow(bookId: string, userId: string): Promise<BorrowRow> {
@@ -125,7 +122,7 @@ export class BorrowsService {
         .where(sql`${schema.borrows.id} = ANY(${borrowIds})`);
       for (const r of rows) borrowMap.set(r.id, r);
     }
-    const bookMap = await this.readModel.attachToBorrows(
+    const bookMap = await this.books.attachToBorrows(
       [...borrowMap.values()].map((b) => ({ bookId: b.bookId })),
     );
     const data: BorrowWithBook[] = borrowIds.flatMap((id) => {

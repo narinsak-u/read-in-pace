@@ -6,12 +6,9 @@ export const BORROW_REPO = Symbol('BORROW_REPO');
 export const PURCHASE_REPO = Symbol('PURCHASE_REPO');
 export const POST_REPO = Symbol('POST_REPO');
 export const GOAL_REPO = Symbol('GOAL_REPO');
-export const BOOK_READ_MODEL = Symbol('BOOK_READ_MODEL');
-
 export type {
   BookPricing,
   BookRepository,
-  BookReadModel,
   BookRow,
   NewBook,
   UpdateBook,

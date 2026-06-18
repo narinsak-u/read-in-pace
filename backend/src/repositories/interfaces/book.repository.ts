@@ -24,9 +24,6 @@ export interface BookRepository {
   delete(id: string): Promise<boolean>;
   incrementStock(bookId: string): Promise<void>;
   decrementStock(bookId: string): Promise<BookRow | null>;
-}
-
-export interface BookReadModel {
   findFullById(id: string): Promise<BookRow | null>;
   findFullByIdOrSlug(idOrSlug: string): Promise<BookRow | null>;
   findFullPaginated(
