@@ -1,5 +1,4 @@
 import { InMemoryLikeRepository } from './in-memory-like.repository';
-import { LIKE_REPO } from '../tokens';
 
 describe('InMemoryLikeRepository', () => {
   let repo: InMemoryLikeRepository;
@@ -31,9 +30,5 @@ describe('InMemoryLikeRepository', () => {
       liked: true,
       likeCount: 2,
     });
-  });
-
-  it('exposes the LIKE_REPO token as a Symbol', () => {
-    expect(typeof LIKE_REPO).toBe('symbol');
   });
 });

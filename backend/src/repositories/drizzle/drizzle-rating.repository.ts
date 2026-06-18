@@ -3,11 +3,11 @@ import { and, eq, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../db/db.module';
 import * as schema from '../../db/schema';
-import { type RatingRepository } from '../interfaces/rating.repository';
-import { RATING_REPO } from '../tokens';
+
+export type RatingRow = typeof schema.ratings.$inferSelect;
 
 @Injectable()
-export class DrizzleRatingRepository implements RatingRepository {
+export class DrizzleRatingRepository {
   constructor(
     @Inject(DRIZZLE) private readonly db: NodePgDatabase<typeof schema>,
   ) {}
@@ -61,8 +61,3 @@ export class DrizzleRatingRepository implements RatingRepository {
     return row?.avg ? Number(row.avg) : null;
   }
 }
-
-export const ratingRepoProvider = {
-  provide: RATING_REPO,
-  useExisting: DrizzleRatingRepository,
-};

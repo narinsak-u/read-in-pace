@@ -3,11 +3,11 @@ import { and, eq, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../db/db.module';
 import * as schema from '../../db/schema';
-import { type LikeRepository } from '../interfaces/like.repository';
-import { LIKE_REPO } from '../tokens';
+
+export type LikeRow = typeof schema.likes.$inferSelect;
 
 @Injectable()
-export class DrizzleLikeRepository implements LikeRepository {
+export class DrizzleLikeRepository {
   constructor(
     @Inject(DRIZZLE) private readonly db: NodePgDatabase<typeof schema>,
   ) {}
@@ -52,8 +52,3 @@ export class DrizzleLikeRepository implements LikeRepository {
     return { liked: !existing, likeCount: Number(result?.count ?? 0) };
   }
 }
-
-export const likeRepoProvider = {
-  provide: LIKE_REPO,
-  useExisting: DrizzleLikeRepository,
-};

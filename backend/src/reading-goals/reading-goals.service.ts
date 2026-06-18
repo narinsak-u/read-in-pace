@@ -1,11 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { GOAL_REPO, type ReadingGoalRepository } from '../repositories/tokens';
+import { Injectable } from '@nestjs/common';
+import { DrizzleGoalRepository } from '../repositories/drizzle/drizzle-goal.repository';
 
 @Injectable()
 export class ReadingGoalsService {
-  constructor(
-    @Inject(GOAL_REPO) private readonly goals: ReadingGoalRepository,
-  ) {}
+  constructor(private readonly goals: DrizzleGoalRepository) {}
 
   async getGoal(userId: string) {
     const year = new Date().getFullYear();

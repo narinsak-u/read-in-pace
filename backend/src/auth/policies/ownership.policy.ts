@@ -2,23 +2,18 @@
 // Loads the resource via the appropriate repository and verifies the user is the owner.
 import {
   ForbiddenException,
-  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  BOOK_REPO,
-  COMMENT_REPO,
-  type BookRepository,
-  type CommentRepository,
-} from '../../repositories/tokens';
+import { DrizzleBookRepository } from '../../repositories/drizzle/drizzle-book.repository';
+import { DrizzleCommentRepository } from '../../repositories/drizzle/drizzle-comment.repository';
 import { Policy, PolicyContext } from './policy.types';
 
 @Injectable()
 export class OwnershipPolicy implements Policy {
   constructor(
-    @Inject(BOOK_REPO) private readonly books: BookRepository,
-    @Inject(COMMENT_REPO) private readonly comments: CommentRepository,
+    private readonly books: DrizzleBookRepository,
+    private readonly comments: DrizzleCommentRepository,
     public readonly action: string,
   ) {}
 

@@ -3,14 +3,22 @@ import { and, count, desc, eq, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../db/db.module';
 import * as schema from '../../db/schema';
-import {
-  type PostRepository,
-  type PostRow,
-} from '../interfaces/post.repository';
-import { POST_REPO } from '../tokens';
+
+export type PostRow = typeof schema.posts.$inferSelect;
+export type NewPost = typeof schema.posts.$inferInsert;
+
+export interface PostWithUser {
+  id: string;
+  text: string;
+  rating: number | null;
+  createdAt: Date;
+  user: { id: string; name: string; image: string | null };
+  likeCount: number;
+  replyCount: number;
+}
 
 @Injectable()
-export class DrizzlePostRepository implements PostRepository {
+export class DrizzlePostRepository {
   constructor(
     @Inject(DRIZZLE) private readonly db: NodePgDatabase<typeof schema>,
   ) {}
@@ -154,8 +162,3 @@ export class DrizzlePostRepository implements PostRepository {
     return row;
   }
 }
-
-export const postRepoProvider = {
-  provide: POST_REPO,
-  useExisting: DrizzlePostRepository,
-};

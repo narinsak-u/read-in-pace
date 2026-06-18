@@ -6,18 +6,16 @@ import {
   CAN_DELETE_COMMENT,
   CAN_EDIT_BOOK,
 } from './policy.types';
-import {
-  BOOK_REPO,
-  COMMENT_REPO,
-  type BookRepository,
-  type CommentRepository,
-} from '../../repositories/tokens';
+import { DrizzleBookRepository } from '../../repositories/drizzle/drizzle-book.repository';
+import { DrizzleCommentRepository } from '../../repositories/drizzle/drizzle-comment.repository';
 
 const ownershipProvider = (token: string, action: string): Provider => ({
   provide: token,
-  useFactory: (books: BookRepository, comments: CommentRepository) =>
-    new OwnershipPolicy(books, comments, action),
-  inject: [BOOK_REPO, COMMENT_REPO],
+  useFactory: (
+    books: DrizzleBookRepository,
+    comments: DrizzleCommentRepository,
+  ) => new OwnershipPolicy(books, comments, action),
+  inject: [DrizzleBookRepository, DrizzleCommentRepository],
 });
 
 @Module({

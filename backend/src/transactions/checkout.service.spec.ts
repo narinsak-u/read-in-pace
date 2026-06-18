@@ -3,10 +3,9 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '../config/config.provider';
 import { CheckoutService } from './checkout.service';
 import {
-  BOOK_REPO,
-  type BookRepository,
+  DrizzleBookRepository,
   type BookPricing,
-} from '../repositories/tokens';
+} from '../repositories/drizzle/drizzle-book.repository';
 import { STRIPE } from './stripe.provider';
 
 const fakeBook = (id: string, inStock: number, price: string): BookPricing => ({
@@ -18,7 +17,9 @@ const fakeBook = (id: string, inStock: number, price: string): BookPricing => ({
   isAvailable: inStock > 1,
 });
 
-const makeBookRepo = (books: BookPricing[]): BookRepository => ({
+const makeBookRepo = (
+  books: BookPricing[],
+): Partial<DrizzleBookRepository> => ({
   findById: () => Promise.resolve(null),
   findByIdOrSlug: () => Promise.resolve(null),
   findOwner: () => Promise.resolve(null),
@@ -27,10 +28,19 @@ const makeBookRepo = (books: BookPricing[]): BookRepository => ({
   create: () => Promise.resolve({} as never),
   update: () => Promise.resolve(null),
   delete: () => Promise.resolve(false),
-  setStockForBorrow: () => Promise.resolve(null),
   incrementStock: () => Promise.resolve(undefined),
-  acquireLockForBorrow: () => Promise.resolve(null),
   decrementStock: () => Promise.resolve(null),
+  findFullById: () => Promise.resolve(null),
+  findFullByIdOrSlug: () => Promise.resolve(null),
+  findFullPaginated: () =>
+    Promise.resolve({
+      data: [],
+      meta: { page: 1, limit: 10, total: 0, totalPages: 0 },
+    }),
+  findNewArrivals: () => Promise.resolve([]),
+  getTrending: () => Promise.resolve([]),
+  attachToBorrows: () => Promise.resolve(new Map()),
+  attachToPurchases: () => Promise.resolve(new Map()),
 });
 
 const makeStripe = () => {
@@ -68,7 +78,7 @@ describe('CheckoutService.forBook', () => {
     const moduleRef = Test.createTestingModule({
       providers: [
         CheckoutService,
-        { provide: BOOK_REPO, useValue: makeBookRepo(books) },
+        { provide: DrizzleBookRepository, useValue: makeBookRepo(books) },
         { provide: STRIPE, useValue: stripe },
         { provide: ConfigService, useValue: config },
       ],
@@ -116,7 +126,7 @@ describe('CheckoutService.forCart', () => {
     const moduleRef = Test.createTestingModule({
       providers: [
         CheckoutService,
-        { provide: BOOK_REPO, useValue: makeBookRepo(books) },
+        { provide: DrizzleBookRepository, useValue: makeBookRepo(books) },
         { provide: STRIPE, useValue: stripe },
         { provide: ConfigService, useValue: config },
       ],

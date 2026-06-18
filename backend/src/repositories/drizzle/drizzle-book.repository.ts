@@ -1,21 +1,25 @@
-// Drizzle implementation of BookRepository.
 import { Inject, Injectable } from '@nestjs/common';
 import { and, desc, eq, gt, or, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../db/db.module';
 import * as schema from '../../db/schema';
 import { buildPaginated, type Paginated } from '../paginated';
-import {
-  type BookPricing,
-  type BookRepository,
-  type BookRow,
-  type NewBook,
-  type UpdateBook,
-} from '../interfaces/book.repository';
-import { BOOK_REPO } from '../tokens';
+
+export type BookRow = typeof schema.books.$inferSelect;
+export type NewBook = typeof schema.books.$inferInsert;
+export type UpdateBook = Partial<NewBook>;
+
+export interface BookPricing {
+  id: string;
+  title: string;
+  price: string;
+  category: string;
+  inStock: number;
+  isAvailable: boolean;
+}
 
 @Injectable()
-export class DrizzleBookRepository implements BookRepository {
+export class DrizzleBookRepository {
   constructor(
     @Inject(DRIZZLE) private readonly db: NodePgDatabase<typeof schema>,
   ) {}
@@ -216,8 +220,3 @@ const bookWithMeta = {
   avgRating: sql<number>`COALESCE((SELECT AVG(${schema.ratings.rating}) FROM ${schema.ratings} WHERE ${schema.ratings.bookId} = ${schema.books.id}), 0)`,
   ratingsCount: sql<number>`(SELECT COUNT(*) FROM ${schema.ratings} WHERE ${schema.ratings.bookId} = ${schema.books.id})`,
 } as const;
-
-export const bookRepoProvider = {
-  provide: BOOK_REPO,
-  useExisting: DrizzleBookRepository,
-};

@@ -3,14 +3,11 @@ import { and, eq, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../db/db.module';
 import * as schema from '../../db/schema';
-import {
-  type ReadingGoalRepository,
-  type ReadingGoalRow,
-} from '../interfaces/goal.repository';
-import { GOAL_REPO } from '../tokens';
+
+export type ReadingGoalRow = typeof schema.readingGoals.$inferSelect;
 
 @Injectable()
-export class DrizzleGoalRepository implements ReadingGoalRepository {
+export class DrizzleGoalRepository {
   constructor(
     @Inject(DRIZZLE) private readonly db: NodePgDatabase<typeof schema>,
   ) {}
@@ -82,8 +79,3 @@ export class DrizzleGoalRepository implements ReadingGoalRepository {
     return Number(row?.count ?? 0);
   }
 }
-
-export const goalRepoProvider = {
-  provide: GOAL_REPO,
-  useExisting: DrizzleGoalRepository,
-};

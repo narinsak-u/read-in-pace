@@ -6,12 +6,8 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { STRIPE } from './stripe.provider';
 import * as schema from '../db/schema';
 import { and, eq, gt, sql } from 'drizzle-orm';
-import {
-  BOOK_REPO,
-  PURCHASE_REPO,
-  type BookRepository,
-  type PurchaseRepository,
-} from '../repositories/tokens';
+import { DrizzleBookRepository } from '../repositories/drizzle/drizzle-book.repository';
+import { DrizzlePurchaseRepository } from '../repositories/drizzle/drizzle-purchase.repository';
 import type StripeConstructor from 'stripe';
 
 type StripeClient = ReturnType<typeof StripeConstructor>;
@@ -21,8 +17,8 @@ export class PurchaseConfirmationService {
   constructor(
     @Inject(DRIZZLE) private readonly db: NodePgDatabase<typeof schema>,
     @Inject(STRIPE) private readonly stripe: StripeClient,
-    @Inject(BOOK_REPO) private readonly books: BookRepository,
-    @Inject(PURCHASE_REPO) private readonly purchases: PurchaseRepository,
+    private readonly books: DrizzleBookRepository,
+    private readonly purchases: DrizzlePurchaseRepository,
   ) {}
 
   async confirm(sessionId: string, userId: string): Promise<unknown> {

@@ -3,16 +3,24 @@ import { and, eq, inArray } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../db/db.module';
 import * as schema from '../../db/schema';
-import {
-  type CommentRepository,
-  type CommentRow,
-  type CommentWithUser,
-  type NewComment,
-} from '../interfaces/comment.repository';
-import { COMMENT_REPO } from '../tokens';
+
+export type CommentRow = typeof schema.comments.$inferSelect;
+export type NewComment = typeof schema.comments.$inferInsert;
+
+export interface CommentWithUser {
+  id: string;
+  bookId: string;
+  userId: string;
+  parentId: string | null;
+  text: string;
+  rating: number | null;
+  createdAt: Date;
+  updatedAt: Date;
+  user: { id: string; name: string; image: string | null };
+}
 
 @Injectable()
-export class DrizzleCommentRepository implements CommentRepository {
+export class DrizzleCommentRepository {
   constructor(
     @Inject(DRIZZLE) private readonly db: NodePgDatabase<typeof schema>,
   ) {}
@@ -148,8 +156,3 @@ export class DrizzleCommentRepository implements CommentRepository {
     return { liked: false, likeCount: count };
   }
 }
-
-export const commentRepoProvider = {
-  provide: COMMENT_REPO,
-  useExisting: DrizzleCommentRepository,
-};

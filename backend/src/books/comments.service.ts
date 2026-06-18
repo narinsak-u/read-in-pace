@@ -11,19 +11,15 @@ import {
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../db/db.module';
 import * as schema from '../db/schema';
-import {
-  COMMENT_REPO,
-  RATING_REPO,
-  type CommentRepository,
-  type RatingRepository,
-} from '../repositories/tokens';
+import { DrizzleCommentRepository } from '../repositories/drizzle/drizzle-comment.repository';
+import { DrizzleRatingRepository } from '../repositories/drizzle/drizzle-rating.repository';
 import type { CreateCommentDto } from './dto/create-comment.dto';
 
 @Injectable()
 export class CommentsService {
   constructor(
-    @Inject(COMMENT_REPO) private readonly comments: CommentRepository,
-    @Inject(RATING_REPO) private readonly ratings: RatingRepository,
+    private readonly comments: DrizzleCommentRepository,
+    private readonly ratings: DrizzleRatingRepository,
     @Inject(DRIZZLE) private readonly db: NodePgDatabase<typeof schema>,
   ) {}
 

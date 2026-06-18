@@ -1,9 +1,8 @@
 // In-memory fake of LikeRepository. No Drizzle, no Postgres, no Docker.
 import { Injectable } from '@nestjs/common';
-import type { LikeRepository } from '../interfaces/like.repository';
 
 @Injectable()
-export class InMemoryLikeRepository implements LikeRepository {
+export class InMemoryLikeRepository {
   private likes = new Map<string, Set<string>>();
 
   isLikedBy(bookId: string, userId: string): Promise<boolean> {

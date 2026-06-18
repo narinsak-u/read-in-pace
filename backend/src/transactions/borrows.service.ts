@@ -10,13 +10,9 @@ import { DRIZZLE } from '../db/db.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../db/schema';
 import { and, eq, isNull, sql } from 'drizzle-orm';
-import {
-  BOOK_REPO,
-  BORROW_REPO,
-  type BookRepository,
-  type BorrowRepository,
-  type BorrowRow,
-} from '../repositories/tokens';
+import { DrizzleBookRepository } from '../repositories/drizzle/drizzle-book.repository';
+import { DrizzleBorrowRepository } from '../repositories/drizzle/drizzle-borrow.repository';
+import type { BorrowRow } from '../repositories/drizzle/drizzle-borrow.repository';
 import { buildPaginated, type Paginated } from '../repositories/paginated';
 
 const BORROW_PERIOD_DAYS = 14;
@@ -30,8 +26,8 @@ export interface BorrowWithBook {
 export class BorrowsService {
   constructor(
     @Inject(DRIZZLE) private readonly db: NodePgDatabase<typeof schema>,
-    @Inject(BOOK_REPO) private readonly books: BookRepository,
-    @Inject(BORROW_REPO) private readonly borrows: BorrowRepository,
+    private readonly books: DrizzleBookRepository,
+    private readonly borrows: DrizzleBorrowRepository,
   ) {}
 
   async borrow(bookId: string, userId: string): Promise<BorrowRow> {

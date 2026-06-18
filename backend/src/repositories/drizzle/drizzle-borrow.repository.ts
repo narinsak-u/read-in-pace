@@ -3,14 +3,11 @@ import { and, count, eq, isNull, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../db/db.module';
 import * as schema from '../../db/schema';
-import {
-  type BorrowRepository,
-  type BorrowRow,
-} from '../interfaces/borrow.repository';
-import { BORROW_REPO } from '../tokens';
+
+export type BorrowRow = typeof schema.borrows.$inferSelect;
 
 @Injectable()
-export class DrizzleBorrowRepository implements BorrowRepository {
+export class DrizzleBorrowRepository {
   constructor(
     @Inject(DRIZZLE) private readonly db: NodePgDatabase<typeof schema>,
   ) {}
@@ -104,8 +101,3 @@ export class DrizzleBorrowRepository implements BorrowRepository {
     };
   }
 }
-
-export const borrowRepoProvider = {
-  provide: BORROW_REPO,
-  useExisting: DrizzleBorrowRepository,
-};

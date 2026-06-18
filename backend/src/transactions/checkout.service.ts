@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { STRIPE } from './stripe.provider';
 import { ConfigService } from '../config/config.provider';
-import { BOOK_REPO, type BookRepository } from '../repositories/tokens';
+import { DrizzleBookRepository } from '../repositories/drizzle/drizzle-book.repository';
 import { applyDiscounts } from './pricing';
 import type StripeConstructor from 'stripe';
 
@@ -19,7 +19,7 @@ export class CheckoutService {
   constructor(
     @Inject(STRIPE) private readonly stripe: StripeClient,
     private readonly config: ConfigService,
-    @Inject(BOOK_REPO) private readonly books: BookRepository,
+    private readonly books: DrizzleBookRepository,
   ) {}
 
   async forBook(bookId: string, userId: string): Promise<{ url: string }> {

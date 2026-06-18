@@ -1,25 +1,20 @@
 // Business logic for books: CRUD, paginated listing, stock management, and trending.
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
-  BOOK_REPO,
-  type BookRepository,
+  DrizzleBookRepository,
   type NewBook,
-} from '../repositories/tokens';
-import {
-  LIKE_REPO,
-  RATING_REPO,
-  type LikeRepository,
-  type RatingRepository,
-} from '../repositories/tokens';
+} from '../repositories/drizzle/drizzle-book.repository';
+import { DrizzleLikeRepository } from '../repositories/drizzle/drizzle-like.repository';
+import { DrizzleRatingRepository } from '../repositories/drizzle/drizzle-rating.repository';
 import type { CreateBookDto } from './dto/create-book.dto';
 import type { UpdateBookDto } from './dto/update-book.dto';
 
 @Injectable()
 export class BooksService {
   constructor(
-    @Inject(BOOK_REPO) private readonly books: BookRepository,
-    @Inject(LIKE_REPO) private readonly likes: LikeRepository,
-    @Inject(RATING_REPO) private readonly ratings: RatingRepository,
+    private readonly books: DrizzleBookRepository,
+    private readonly likes: DrizzleLikeRepository,
+    private readonly ratings: DrizzleRatingRepository,
   ) {}
 
   findAll(page: number, limit: number, category?: string) {

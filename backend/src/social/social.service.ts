@@ -1,9 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { POST_REPO, type PostRepository } from '../repositories/tokens';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { DrizzlePostRepository } from '../repositories/drizzle/drizzle-post.repository';
 
 @Injectable()
 export class SocialService {
-  constructor(@Inject(POST_REPO) private readonly posts: PostRepository) {}
+  constructor(private readonly posts: DrizzlePostRepository) {}
 
   getFeed(userId?: string) {
     return this.posts.feed(20, userId);

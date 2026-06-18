@@ -3,14 +3,11 @@ import { and, eq, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../db/db.module';
 import * as schema from '../../db/schema';
-import {
-  type PurchaseRepository,
-  type PurchaseRow,
-} from '../interfaces/purchase.repository';
-import { PURCHASE_REPO } from '../tokens';
+
+export type PurchaseRow = typeof schema.purchases.$inferSelect;
 
 @Injectable()
-export class DrizzlePurchaseRepository implements PurchaseRepository {
+export class DrizzlePurchaseRepository {
   constructor(
     @Inject(DRIZZLE) private readonly db: NodePgDatabase<typeof schema>,
   ) {}
@@ -55,8 +52,3 @@ export class DrizzlePurchaseRepository implements PurchaseRepository {
     return rows.map((r) => ({ row: r, bookId: r.bookId }));
   }
 }
-
-export const purchaseRepoProvider = {
-  provide: PURCHASE_REPO,
-  useExisting: DrizzlePurchaseRepository,
-};
