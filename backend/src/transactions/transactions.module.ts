@@ -5,15 +5,8 @@ import { TransactionsController } from './transactions.controller';
 import { BorrowsService } from './borrows.service';
 import { CheckoutService } from './checkout.service';
 import { PurchaseConfirmationService } from './purchase-confirmation.service';
-import { stripeProvider } from './stripe.provider';
-
 @Module({
   controllers: [TransactionsController],
-  providers: [
-    BorrowsService,
-    CheckoutService,
-    PurchaseConfirmationService,
-    stripeProvider,
-  ],
+  providers: [BorrowsService, CheckoutService, PurchaseConfirmationService],
 })
 export class TransactionsModule {}

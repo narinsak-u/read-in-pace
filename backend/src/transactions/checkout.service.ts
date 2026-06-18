@@ -1,26 +1,27 @@
 // CheckoutService — Stripe single-book and cart checkout session creation.
 // Hides the inStock<=1 borrow-only rule, the pricing math, and the URL construction.
 import {
-  Inject,
   Injectable,
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { STRIPE } from './stripe.provider';
 import { ConfigService } from '../config/config.provider';
 import { DrizzleBookRepository } from '../repositories/drizzle/drizzle-book.repository';
 import { applyDiscounts } from './pricing';
-import type StripeConstructor from 'stripe';
+import StripeConstructor from 'stripe';
 
 type StripeClient = ReturnType<typeof StripeConstructor>;
 
 @Injectable()
 export class CheckoutService {
+  private readonly stripe: StripeClient;
+
   constructor(
-    @Inject(STRIPE) private readonly stripe: StripeClient,
     private readonly config: ConfigService,
     private readonly books: DrizzleBookRepository,
-  ) {}
+  ) {
+    this.stripe = new StripeConstructor(this.config.stripe.secretKey);
+  }
 
   async forBook(bookId: string, userId: string): Promise<{ url: string }> {
     const [book] = await this.books.findPricingForPurchase([bookId]);

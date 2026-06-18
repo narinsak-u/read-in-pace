@@ -3,23 +3,27 @@
 import { Inject, Injectable, BadRequestException } from '@nestjs/common';
 import { DRIZZLE } from '../db/db.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { STRIPE } from './stripe.provider';
+import { ConfigService } from '../config/config.provider';
 import * as schema from '../db/schema';
 import { and, eq, gt, sql } from 'drizzle-orm';
 import { DrizzleBookRepository } from '../repositories/drizzle/drizzle-book.repository';
 import { DrizzlePurchaseRepository } from '../repositories/drizzle/drizzle-purchase.repository';
-import type StripeConstructor from 'stripe';
+import StripeConstructor from 'stripe';
 
 type StripeClient = ReturnType<typeof StripeConstructor>;
 
 @Injectable()
 export class PurchaseConfirmationService {
+  private readonly stripe: StripeClient;
+
   constructor(
+    config: ConfigService,
     @Inject(DRIZZLE) private readonly db: NodePgDatabase<typeof schema>,
-    @Inject(STRIPE) private readonly stripe: StripeClient,
     private readonly books: DrizzleBookRepository,
     private readonly purchases: DrizzlePurchaseRepository,
-  ) {}
+  ) {
+    this.stripe = new StripeConstructor(config.stripe.secretKey);
+  }
 
   async confirm(sessionId: string, userId: string): Promise<unknown> {
     const session = await this.stripe.checkout.sessions.retrieve(sessionId);
