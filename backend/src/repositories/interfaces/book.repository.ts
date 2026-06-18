@@ -27,8 +27,8 @@ export interface BookRepository {
   findOwner(bookId: string): Promise<string | null>;
   findPricingForPurchase(bookIds: string[]): Promise<BookPricing[]>;
   create(data: NewBook, userId: string): Promise<BookRow>;
-  update(id: string, data: UpdateBook, userId: string): Promise<BookRow | null>;
-  delete(id: string, userId: string): Promise<boolean>;
+  update(id: string, data: UpdateBook): Promise<BookRow | null>;
+  delete(id: string): Promise<boolean>;
   setStockForBorrow(bookId: string, remaining: number): Promise<BookRow | null>;
   incrementStock(bookId: string): Promise<void>;
   acquireLockForBorrow(bookId: string): Promise<BookLockRow | null>;

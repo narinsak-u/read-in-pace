@@ -45,13 +45,13 @@ export class BooksService {
   }
 
   async update(id: string, data: UpdateBookDto, userId: string) {
-    const updated = await this.books.update(id, data, userId);
+    const updated = await this.books.update(id, data);
     if (!updated) throw new NotFoundException('Book not found');
     return updated;
   }
 
   async remove(id: string, userId: string) {
-    const deleted = await this.books.delete(id, userId);
+    const deleted = await this.books.delete(id);
     if (!deleted) throw new NotFoundException('Book not found');
   }
 

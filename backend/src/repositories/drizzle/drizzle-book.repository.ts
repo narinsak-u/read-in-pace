@@ -78,9 +78,7 @@ export class DrizzleBookRepository implements BookRepository {
   async update(
     id: string,
     data: UpdateBook,
-    _userId: string,
   ): Promise<BookRow | null> {
-    void _userId;
     const [row] = await this.db
       .update(schema.books)
       .set(data)
@@ -89,8 +87,7 @@ export class DrizzleBookRepository implements BookRepository {
     return row ?? null;
   }
 
-  async delete(id: string, _userId: string): Promise<boolean> {
-    void _userId;
+  async delete(id: string): Promise<boolean> {
     const result = await this.db
       .delete(schema.books)
       .where(eq(schema.books.id, id))
