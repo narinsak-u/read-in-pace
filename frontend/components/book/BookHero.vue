@@ -1,14 +1,22 @@
 <script setup lang="ts">
 import { Heart, MessageCircle } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
+import { useBook } from '~/composables/useBook';
 import type { Book } from '~/types/book';
 
-defineProps<{
+const props = defineProps<{
   book: Book;
+  bookId: string;
   flash: (message: string) => void;
 }>();
 
-const saved = shallowRef(false);
+const {
+  liked,
+  likeCount,
+  userRating,
+  toggleLike,
+  setRating,
+} = useBook(() => props.bookId);
 
 function scrollTo(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -40,9 +48,25 @@ function scrollTo(id: string) {
         >from {{ book.ratingsCount }} reader ratings</span
       >
     </div>
+    <div v-if="auth.signedIn" class="mt-4 flex items-center gap-2">
+      <span class="font-mono text-[10px] uppercase text-muted-foreground">Your rating</span>
+      <span class="flex gap-0.5">
+        <button
+          v-for="star in 5"
+          :key="star"
+          :disabled="ratingSubmitting"
+          class="cursor-pointer text-lg transition-colors hover:text-primary disabled:opacity-50"
+          :class="(userRating ?? 0) >= star ? 'text-primary' : 'text-foreground/20'"
+          @click="setRating(star)"
+        >
+          ★
+        </button>
+      </span>
+      <span v-if="userRating" class="text-xs text-muted-foreground">({{ userRating }}/5)</span>
+    </div>
     <div class="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
       <span class="flex items-center gap-1">
-        <Heart class="size-4" /> {{ book.likeCount }} {{ book.likeCount === 1 ? 'like' : 'likes' }}
+        <Heart class="size-4" /> {{ likeCount }} {{ likeCount === 1 ? 'like' : 'likes' }}
       </span>
       <span class="flex items-center gap-1">
         <MessageCircle class="size-4" /> {{ book.commentCount }} {{ book.commentCount === 1 ? 'comment' : 'comments' }}
@@ -52,9 +76,9 @@ function scrollTo(id: string) {
       {{ book.synopsis }}
     </p>
     <div class="mt-8 flex flex-wrap gap-3">
-      <Button variant="archivalGhost" @click="saved = !saved">
-        <Heart :class="saved ? 'fill-current text-primary' : ''" />
-        {{ saved ? 'Saved to list' : 'Save to list' }}
+      <Button variant="archivalGhost" @click="toggleLike">
+        <Heart :class="liked ? 'fill-current text-primary' : ''" />
+        {{ liked ? 'Liked' : 'Save to list' }}
       </Button>
       <Button variant="archivalGhost" @click="scrollTo('discussion')">
         <MessageCircle /> Read discussion
