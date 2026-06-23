@@ -9,7 +9,7 @@ Migrate the existing "Read in Peace" TanStack React monolith (React 19 + TanStac
 ## 1. Monorepo Structure
 
 ```
-read-in-pace/
+read-in-peace/
 ├── frontend/                  # Nuxt 3 SSR app
 │   ├── app.vue
 │   ├── nuxt.config.ts

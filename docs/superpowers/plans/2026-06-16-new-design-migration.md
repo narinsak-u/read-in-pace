@@ -289,7 +289,7 @@ export const useCartStore = defineStore('cart', () => {
 
   function hydrateFromStorage() {
     try {
-      const stored = localStorage.getItem('read-in-pace-cart')
+      const stored = localStorage.getItem('read-in-peace-cart')
       if (stored) {
         items.value = JSON.parse(stored)
       }
@@ -299,7 +299,7 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   function persist() {
-    localStorage.setItem('read-in-pace-cart', JSON.stringify(items.value))
+    localStorage.setItem('read-in-peace-cart', JSON.stringify(items.value))
   }
 
   hydrateFromStorage()

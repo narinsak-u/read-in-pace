@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useAuthStore } from "~/stores/auth";
 import { Button } from "~/components/ui/button";
 
 definePageMeta({
@@ -8,12 +9,12 @@ definePageMeta({
   layout: "default",
 });
 
-const query = ref("");
-const returned = ref<string[]>([]);
-const reviewOpen = ref(false);
-const rating = ref(0);
-const reviewText = ref("");
+const query = shallowRef("");
+const reviewOpen = shallowRef(false);
+const rating = shallowRef(0);
+const reviewText = shallowRef("");
 const { notice, flash } = useFlash();
+const auth = useAuthStore();
 </script>
 
 <template>
@@ -25,17 +26,16 @@ const { notice, flash } = useFlash();
     <main class="mx-auto grid max-w-7xl grid-cols-12 gap-10 px-4 py-8 md:px-6">
       <div class="col-span-12 space-y-12 lg:col-span-8">
         <ActiveLoans
-          :returned="returned"
-          :flashcards="flash"
-          @return="returned.push($event)"
+          :mode="auth.signedIn ? 'loans' : 'trending'"
+          :flash="flash"
           @open-review="reviewOpen = true"
         />
-        <NewArrivals v-model:query="query" :flashcards="flash" />
+        <NewArrivals v-model:query="query" :flash="flash" />
       </div>
 
       <aside class="col-span-12 space-y-10 lg:col-span-4">
         <YearlyProgress :current="24" :goal="50" :behind="2" :year="2026" />
-        <ReaderFeed :flashcards="flash" />
+        <ReaderFeed :flash="flash" />
 
         <!-- Book Club -->
         <section
@@ -59,7 +59,7 @@ const { notice, flash } = useFlash();
       v-model:open="reviewOpen"
       v-model:rating="rating"
       v-model:reviewText="reviewText"
-      :flashcards="flash"
+      :flash="flash"
     />
   </div>
 </template>

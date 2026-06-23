@@ -586,7 +586,7 @@ stores/cart.ts → addItem(book)
        drawerOpen.value = true  (auto-opens drawer)
   │
   ▼
-watch(items) → localStorage.setItem("read-in-pace-cart", JSON.stringify(items))
+watch(items) → localStorage.setItem("read-in-peace-cart", JSON.stringify(items))
   │  Cart survives page reloads via localStorage
 ```
 

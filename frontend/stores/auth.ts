@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { shallowRef, watch } from 'vue';
-import { toast } from 'vue-sonner';
 import { authClient, signIn, signUp, signOut } from '~/lib/auth-client';
+import { useFlash } from '~/composables/useFlash';
 
 export interface User {
   name: string;
@@ -15,6 +15,7 @@ export const useAuthStore = defineStore('auth', () => {
   const loading = shallowRef(false);
   const showAuthModal = ref(false);
   const onAuthSuccess = shallowRef<(() => void) | null>(null);
+  const { flash } = useFlash();
 
   const session = authClient.useSession();
 
@@ -46,15 +47,15 @@ export const useAuthStore = defineStore('auth', () => {
       if (data?.user) {
         user.value = data.user;
         signedIn.value = true;
-        toast.success('Signed in successfully');
+        flash('Signed in successfully');
         const callback = onAuthSuccess.value;
         closeAuthModal();
         callback?.();
       }
-    } catch {
+    } catch (err: any) {
       signedIn.value = false;
       user.value = null;
-      toast.error('Failed to sign in');
+      flash(err?.message || err?.data?.message || 'Failed to sign in');
     } finally {
       loading.value = false;
     }
@@ -68,15 +69,15 @@ export const useAuthStore = defineStore('auth', () => {
       if (data?.user) {
         user.value = data.user;
         signedIn.value = true;
-        toast.success('Account created successfully');
+        flash('Account created successfully');
         const callback = onAuthSuccess.value;
         closeAuthModal();
         callback?.();
       }
-    } catch {
+    } catch (err: any) {
       signedIn.value = false;
       user.value = null;
-      toast.error('Failed to create account');
+      flash(err?.message || err?.data?.message || 'Failed to create account');
     } finally {
       loading.value = false;
     }
@@ -86,7 +87,7 @@ export const useAuthStore = defineStore('auth', () => {
     await signOut();
     signedIn.value = false;
     user.value = null;
-    toast.success('Signed out');
+    flash('Signed out');
   }
 
   function toggleAdmin() {

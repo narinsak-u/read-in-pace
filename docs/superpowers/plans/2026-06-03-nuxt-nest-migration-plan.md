@@ -24,7 +24,7 @@
 
 ```json
 {
-  "name": "read-in-pace",
+  "name": "read-in-peace",
   "private": true,
   "type": "module",
   "workspaces": ["frontend", "backend"],

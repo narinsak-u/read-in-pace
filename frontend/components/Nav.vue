@@ -1,37 +1,31 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from "vue";
-import { ArrowLeft, Search, ShoppingBag } from "lucide-vue-next";
-import { Button } from "~/components/ui/button";
-import { useCartStore } from "~/stores/cart";
+import { onMounted, onUnmounted, useTemplateRef } from 'vue';
+import { ArrowLeft, Search, ShoppingBag } from 'lucide-vue-next';
+import { Button } from '~/components/ui/button';
+import { buttonVariants } from '~/components/ui/button/variants';
+import { useCartStore } from '~/stores/cart';
 
-const query = defineModel<string>("query", { default: "" });
+const query = defineModel<string>('query', { default: '' });
 const cart = useCartStore();
-const router = useRouter();
 
 const props = withDefaults(
   defineProps<{
-    mode?: "feed" | "book" | "cart";
+    mode?: 'feed' | 'book' | 'cart';
   }>(),
-  {
-    mode: "feed",
-  },
+  { mode: 'feed' },
 );
 
-const searchInput = ref<HTMLInputElement | null>(null);
+const searchInput = useTemplateRef<HTMLInputElement>('searchInput');
 
 function onKeydown(e: KeyboardEvent) {
-  if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
     e.preventDefault();
     searchInput.value?.focus();
   }
 }
 
-onMounted(() => {
-  document.addEventListener("keydown", onKeydown);
-});
-onUnmounted(() => {
-  document.removeEventListener("keydown", onKeydown);
-});
+onMounted(() => document.addEventListener('keydown', onKeydown));
+onUnmounted(() => document.removeEventListener('keydown', onKeydown));
 </script>
 
 <template>
@@ -45,23 +39,29 @@ onUnmounted(() => {
         <button
           v-if="mode === 'feed'"
           type="button"
-          class="font-serif text-xl font-bold italic tracking-tight text-primary"
+          class="font-display text-xl tracking-tight font-bold md:px-6"
         >
-          <NuxtLink to="/">Read in Peace</NuxtLink>
-        </button>
-        <Button v-else as-child variant="archivalGhost">
-          <NuxtLink to="/feed" class="flex gap-2 items-center">
-            <ArrowLeft />
-            <span>
-              {{ mode === "book" ? "Back to the stacks" : "Continue browsing" }}
-            </span>
+          <NuxtLink to="/">
+            Read<span class="text-primary"> in </span>Peace
           </NuxtLink>
-        </Button>
+        </button>
+        <NuxtLink
+          v-else
+          to="/feed"
+          :class="
+            buttonVariants({ variant: 'archivalGhost' }) +
+            ' flex gap-2 items-center'
+          "
+        >
+          <ArrowLeft />
+          <span>
+            {{ mode === "book" ? "Back to the stacks" : "Continue browsing" }}
+          </span>
+        </NuxtLink>
       </div>
 
       <!-- Center: Search -->
-      <div class="hidden flex-1 m-auto max-w-3xl sm:block"
-      >
+      <div class="flex-1 m-auto max-w-3xl">
         <label class="relative">
           <span class="sr-only">Search books</span>
           <Search
@@ -81,12 +81,11 @@ onUnmounted(() => {
         </label>
       </div>
 
-      <!-- Right: Cart + Profile -->
       <div
         :class="
           mode === 'feed'
-            ? 'flex shrink-0 items-center gap-3'
-            : 'ml-auto flex shrink-0 items-center gap-3'
+            ? 'flex shrink-0 items-center gap-3 md:px-6'
+            : 'ml-auto flex shrink-0 items-center gap-3 md:px-6'
         "
       >
         <Button
@@ -106,15 +105,7 @@ onUnmounted(() => {
           </NuxtLink>
         </Button>
 
-        <!-- Profile -->
-        <Button
-          size="icon"
-          variant="archival"
-          aria-label="Open reader profile"
-          class="rounded-full text-xs italic"
-        >
-          JS
-        </Button>
+        <ProfileDropdown />
       </div>
     </div>
   </nav>

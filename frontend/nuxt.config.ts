@@ -9,6 +9,12 @@ export default defineNuxtConfig({
     "shadcn-nuxt",
     "@stefanobartoletti/nuxt-social-share",
   ],
+  components: [
+    {
+      path: "~/components",
+      pathPrefix: false,
+    },
+  ],
   socialShare: {
     baseUrl: process.env.NUXT_PUBLIC_SITE_URL || "http://localhost:3000",
   },
@@ -30,9 +36,17 @@ export default defineNuxtConfig({
   app: {
     head: {
       link: [
-        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
-        { href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&family=Lora:wght@400;500;600&display=swap', rel: 'stylesheet' },
+        { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        {
+          rel: "preconnect",
+          href: "https://fonts.gstatic.com",
+          crossorigin: "",
+        },
+        {
+          href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&family=Lora:wght@400;500;600&family=Satisfy&display=swap",
+          rel: "stylesheet",
+        },
       ],
     },
   },
