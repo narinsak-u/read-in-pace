@@ -1,7 +1,33 @@
 import { ref, shallowRef, computed, readonly, watch } from 'vue'
-import type { BorrowItem, BorrowsResponse } from '~/stores/library'
 import { useAuthStore } from '~/stores/auth'
 import { useInvalidate } from '~/composables/useInvalidate'
+
+export interface BorrowItem {
+  borrowId: string;
+  bookId: string;
+  bookSlug: string;
+  title: string;
+  author: string;
+  cover: string;
+  crop: number | null;
+  shelf: string;
+  category: string;
+  dueAt: string;
+  currentPage: number;
+  totalPages: number;
+  price: string;
+  inStock: number;
+  avgRating: number;
+  ratingsCount: number;
+}
+
+export interface BorrowsResponse {
+  data: {
+    borrow: Record<PropertyKey, unknown>;
+    book: Record<PropertyKey, unknown>;
+  }[];
+  meta: { page: number; limit: number; total: number; totalPages: number };
+}
 
 const borrows = shallowRef<BorrowItem[]>([])
 const borrowsPage = shallowRef(1)

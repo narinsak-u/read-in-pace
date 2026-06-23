@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth';
-import { useLibraryStore } from '~/stores/library';
 import { useBorrows } from '~/composables/useBorrows';
 import { useBooks } from '~/composables/useBooks';
 
@@ -14,7 +13,6 @@ const emit = defineEmits<{
 }>();
 
 const auth = useAuthStore();
-const store = useLibraryStore();
 
 const {
   borrows,
