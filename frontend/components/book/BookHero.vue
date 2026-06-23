@@ -2,6 +2,7 @@
 import { Heart, MessageCircle } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
 import { useBook } from '~/composables/useBook';
+import { useAuthStore } from '~/stores/auth';
 import type { Book } from '~/types/book';
 
 const props = defineProps<{
@@ -9,6 +10,8 @@ const props = defineProps<{
   bookId: string;
   flash: (message: string) => void;
 }>();
+
+const auth = useAuthStore();
 
 const {
   liked,
@@ -51,11 +54,10 @@ function scrollTo(id: string) {
     <div v-if="auth.signedIn" class="mt-4 flex items-center gap-2">
       <span class="font-mono text-[10px] uppercase text-muted-foreground">Your rating</span>
       <span class="flex gap-0.5">
-        <button
-          v-for="star in 5"
-          :key="star"
-          :disabled="ratingSubmitting"
-          class="cursor-pointer text-lg transition-colors hover:text-primary disabled:opacity-50"
+          <button
+            v-for="star in 5"
+            :key="star"
+            class="cursor-pointer text-lg transition-colors hover:text-primary"
           :class="(userRating ?? 0) >= star ? 'text-primary' : 'text-foreground/20'"
           @click="setRating(star)"
         >

@@ -18,6 +18,9 @@ export interface Book {
   commentCount: number;
   avgRating: number;
   ratingsCount: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type BookCard = Pick<
@@ -46,5 +49,8 @@ export function mapBookResponse(raw: Record<string, unknown>): Book {
     commentCount: raw.commentCount as number,
     avgRating: Number(raw.avgRating ?? 0),
     ratingsCount: raw.ratingsCount as number,
-  };
+    createdBy: raw.createdBy as string,
+    createdAt: raw.createdAt as string,
+    updatedAt: raw.updatedAt as string,
+  } satisfies Book;
 }

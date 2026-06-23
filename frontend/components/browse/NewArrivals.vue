@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { shallowRef } from "vue";
 import { stockActions } from "~/utils/stock";
 import { useAuthStore } from "~/stores/auth";
 import { useLibraryStore } from "~/stores/library";

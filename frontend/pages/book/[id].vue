@@ -61,7 +61,7 @@ useHead({
           />
         </div>
 
-        <BookHero :book="book" :flash="flash" />
+        <BookHero :book="book" :book-id="book.id" :flash="flash" />
 
         <BookBorrowCard :book="book" :book-id="book.id" :flash="flash" />
       </section>

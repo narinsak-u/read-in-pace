@@ -9,6 +9,7 @@ interface Review {
   rating: number;
   text: string;
   likes: number;
+  likedByUser: boolean;
   replies: string[];
 }
 
@@ -57,8 +58,8 @@ const replyText = shallowRef("");
           {{ review.text }}
         </p>
         <div class="mt-3 flex gap-2">
-          <Button size="sm" variant="archivalGhost" @click="emit('like')">
-            Like ({{ review.likes }})
+          <Button size="sm" variant="archivalGhost" @click="emit('like')" :class="review.likedByUser ? 'text-primary' : ''">
+            {{ review.likedByUser ? 'Liked' : 'Like' }} ({{ review.likes }})
           </Button>
           <Button size="sm" variant="archivalGhost" @click="emit('reply')">
             Reply ({{ review.replies.length }})

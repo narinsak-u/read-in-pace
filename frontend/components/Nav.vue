@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, useTemplateRef } from 'vue';
-import { ArrowLeft, Search, ShoppingBag } from 'lucide-vue-next';
+import { ArrowLeft, Library, Search, ShoppingBag } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
 import { buttonVariants } from '~/components/ui/button/variants';
 import { useCartStore } from '~/stores/cart';
@@ -88,6 +88,14 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown));
             : 'ml-auto flex shrink-0 items-center gap-3 md:px-6'
         "
       >
+        <NuxtLink
+          to="/dashboard"
+          :class="buttonVariants({ variant: 'archivalGhost', size: 'icon' })"
+          aria-label="My Library"
+        >
+          <Library />
+        </NuxtLink>
+
         <Button
           variant="archivalGhost"
           size="icon"

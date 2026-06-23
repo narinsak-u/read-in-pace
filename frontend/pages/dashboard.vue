@@ -2,6 +2,7 @@
 import { CheckCircle, BookOpen } from 'lucide-vue-next';
 import { useAuthStore } from '~/stores/auth';
 import { usePurchases } from '~/composables/usePurchases';
+import { useBorrows } from '~/composables/useBorrows';
 
 definePageMeta({
   title: 'Dashboard — Read in Peace',
@@ -13,15 +14,22 @@ const router = useRouter();
 const { flash } = useFlash();
 const auth = useAuthStore();
 
-const tab = shallowRef<'purchased'>('purchased');
+const tab = shallowRef<'purchased' | 'borrowed'>('purchased');
 const confirming = shallowRef(false);
 
 const {
   purchases,
   loaded,
   confirmPurchase,
-  refresh,
+  refresh: refreshPurchases,
 } = usePurchases();
+
+const {
+  borrows,
+  borrowsLoaded,
+  returnBook,
+  fetchBorrows,
+} = useBorrows();
 
 async function onConfirmPurchase(sessionId: string) {
   confirming.value = true;
@@ -41,7 +49,8 @@ onMounted(async () => {
   if (sessionId) {
     await onConfirmPurchase(sessionId);
   }
-  await refresh();
+    await refreshPurchases();
+    fetchBorrows(1);
 });
 </script>
 
@@ -171,13 +180,13 @@ onMounted(async () => {
 
       <!-- Borrowed tab -->
       <template v-else>
-        <div v-if="!library.borrowsLoaded" class="mt-16 text-center">
+        <div v-if="!borrowsLoaded" class="mt-16 text-center">
           <p class="font-serif italic text-muted-foreground">
             Loading your borrows...
           </p>
         </div>
 
-        <div v-else-if="library.borrows.length === 0" class="mt-16 text-center">
+        <div v-else-if="borrows.length === 0" class="mt-16 text-center">
           <BookOpen class="mx-auto size-10 text-muted-foreground" />
           <h2 class="mt-4 font-serif text-2xl">No active borrows</h2>
           <p class="mt-2 text-sm text-muted-foreground">
@@ -194,7 +203,7 @@ onMounted(async () => {
 
         <div v-else class="mt-8 divide-y divide-border">
           <article
-            v-for="loan in library.borrows"
+            v-for="loan in borrows"
             :key="loan.borrowId"
             class="flex gap-5 py-6"
           >

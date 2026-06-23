@@ -21,6 +21,7 @@ export function useBook(bookId: string | Ref<string>) {
     try {
       const raw = await $fetch<Record<string, unknown>>(`/api/books/${id.value}`)
       book.value = mapBookResponse(raw)
+      likeCount.value = book.value.likeCount
       if (auth.signedIn) {
         try {
           const likeRes = await $fetch<{ liked: boolean }>(`/api/books/${id.value}/like`)
