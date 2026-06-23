@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { BookOpen, Check, ShoppingBag } from 'lucide-vue-next';
+import { BookOpen, Check, ShoppingBag, ShoppingCart } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
 import { useCartStore } from '~/stores/cart';
+import { useAuthStore } from '~/stores/auth';
+import { useBorrows } from '~/composables/useBorrows';
 import type { Book } from '~/types/book';
 
 const props = defineProps<{
@@ -11,7 +13,63 @@ const props = defineProps<{
 }>();
 
 const cart = useCartStore();
-const borrowed = shallowRef(false);
+const auth = useAuthStore();
+const { borrowedSlugs, borrowBook } = useBorrows();
+const purchasing = shallowRef(false);
+
+const isBorrowed = computed(() => borrowedSlugs.value.has(props.book.slug));
+
+async function borrowBookAction() {
+  if (!auth.signedIn) {
+    auth.openAuthModal(() => { void borrowBookAction(); });
+    return;
+  }
+  try {
+    await borrowBook(props.bookId, props.book.slug);
+    props.flash(`${props.book.title} is now on your desk.`);
+  } catch (e: any) {
+    if (e?.status === 401) {
+      auth.openAuthModal(() => { void borrowBookAction(); });
+    } else {
+      props.flash(e?.data?.message || 'Could not borrow the book.');
+    }
+  }
+}
+
+async function buyNow() {
+  if (!auth.signedIn) {
+    auth.openAuthModal(() => { void buyNow(); });
+    return;
+  }
+  purchasing.value = true;
+  try {
+    const res = await $fetch<{ url: string }>(
+      `/api/books/${props.bookId}/create-checkout-session`,
+      { method: 'POST' },
+    );
+    await navigateTo(res.url, { external: true });
+  } catch (e: any) {
+    if (e?.status === 401) {
+      auth.openAuthModal(() => { void buyNow(); });
+    } else {
+      props.flash(e?.data?.message || 'Could not start checkout.');
+    }
+  } finally {
+    purchasing.value = false;
+  }
+}
+
+function addToCart() {
+  cart.addItem({
+    id: props.bookId,
+    title: props.book.title,
+    author: props.book.author,
+    price: Number(props.book.price),
+    cover: props.book.cover,
+    crop: props.book.crop,
+  });
+  props.flash(`${props.book.title} added to your basket.`);
+}
 </script>
 
 <template>
@@ -26,7 +84,7 @@ const borrowed = shallowRef(false);
       <div>
         <p class="font-medium">
           {{
-            borrowed
+            isBorrowed
               ? 'On your desk'
               : book.inStock > 0
                 ? 'Available now'
@@ -35,8 +93,8 @@ const borrowed = shallowRef(false);
         </p>
         <p class="mt-1 text-xs leading-5 text-muted-foreground">
           {{
-            borrowed
-              ? 'Due July 5, 2026 \u00B7 21-day loan'
+            isBorrowed
+              ? 'Due in 14 days'
               : book.inStock > 0
                 ? `${book.inStock} ${book.inStock === 1 ? 'copy' : 'copies'} ready to borrow`
                 : 'Join the waitlist to be notified'
@@ -47,55 +105,48 @@ const borrowed = shallowRef(false);
     <Button
       class="mt-6 w-full"
       variant="archival"
-      :disabled="borrowed"
-      @click="
-        () => {
-          borrowed = true;
-          flash(`${book.title} is now on your desk.`);
-        }
-      "
+      :disabled="isBorrowed || book.inStock < 1"
+      @click="borrowBookAction"
     >
       <BookOpen />
       {{
-        borrowed
+        isBorrowed
           ? 'Borrowed'
           : book.inStock > 0
-            ? 'Borrow for 21 days'
+            ? 'Borrow for 14 days'
             : 'Join waitlist'
       }}
     </Button>
     <div
-      v-if="borrowed"
+      v-if="isBorrowed"
       class="mt-3 flex items-center gap-2 bg-accent px-3 py-2 text-xs text-accent-foreground"
     >
       <Check class="size-4" /> Loan confirmed
     </div>
+
     <div class="my-6 border-t border-border" />
+
     <p class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
       Keep a copy
     </p>
     <p class="mt-2 font-serif text-3xl font-bold">${{ book.price }}</p>
     <p class="mt-1 text-xs text-muted-foreground">
-      Hardcover · Ships in 2–3 days
+      Hardcover &middot; Ships in 2&ndash;3 days
     </p>
     <Button
       class="mt-4 w-full"
-      variant="archivalOutline"
-      @click="
-        () => {
-          cart.addItem({
-            id: bookId,
-            title: book.title,
-            author: book.author,
-            price: Number(book.price),
-            cover: book.cover,
-            crop: book.crop,
-          });
-          flash(`${book.title} added to your basket.`);
-        }
-      "
+      variant="archival"
+      :disabled="purchasing"
+      @click="buyNow"
     >
-      <ShoppingBag /> Purchase copy
+      <ShoppingBag /> {{ purchasing ? 'Redirecting...' : 'Buy now' }}
+    </Button>
+    <Button
+      class="mt-2 w-full"
+      variant="archivalOutline"
+      @click="addToCart"
+    >
+      <ShoppingCart /> Add to cart
     </Button>
   </aside>
 </template>
