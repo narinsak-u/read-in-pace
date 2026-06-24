@@ -19,7 +19,7 @@ const purchasing = shallowRef(false);
 
 const isBorrowed = computed(() => borrowedSlugs.value.has(props.book.slug));
 const ownedCount = computed(
-  () => purchasedCounts.value.get(props.book.slug) ?? 0,
+  () => purchasedCounts.value.get(props.bookId) ?? 0,
 );
 
 async function borrowBookAction() {

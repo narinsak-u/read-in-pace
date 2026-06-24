@@ -41,9 +41,8 @@ export const useBookStatusStore = defineStore('bookStatus', () => {
       );
       const counts = new Map<string, number>();
       for (const entry of purchases) {
-        const slug =
-          (entry.book.slug as string) ?? (entry.book.id as string);
-        counts.set(slug, (counts.get(slug) ?? 0) + 1);
+        const id = (entry.book.id as string) ?? (entry.book.slug as string);
+        counts.set(id, (counts.get(id) ?? 0) + 1);
       }
       purchasedCounts.value = counts;
     } catch {
@@ -82,9 +81,8 @@ export const useBookStatusStore = defineStore('bookStatus', () => {
       >('/api/user/purchases');
       const counts = new Map<string, number>();
       for (const entry of purchases) {
-        const slug =
-          (entry.book.slug as string) ?? (entry.book.id as string);
-        counts.set(slug, (counts.get(slug) ?? 0) + 1);
+        const id = (entry.book.id as string) ?? (entry.book.slug as string);
+        counts.set(id, (counts.get(id) ?? 0) + 1);
       }
       purchasedCounts.value = counts;
     } catch {

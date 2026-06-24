@@ -1,4 +1,5 @@
 export interface StockInfo {
+  id: string;
   inStock: number;
   slug: string;
 }
@@ -18,7 +19,7 @@ export function stockActions(
   purchasedCounts?: Map<string, number>,
 ): StockActions {
   const isBorrowed = borrowedSlugs.has(book.slug);
-  const ownedCount = purchasedCounts?.get(book.slug) ?? 0;
+  const ownedCount = purchasedCounts?.get(book.id) ?? 0;
   const isPurchased = ownedCount > 0;
   const canBuy = book.inStock > 1;
   const canBorrow = book.inStock > 0 && !isBorrowed;

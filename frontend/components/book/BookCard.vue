@@ -20,7 +20,7 @@ const emit = defineEmits<{
 const cart = useCartStore();
 const { purchasedCounts } = useBookStatusStore();
 const ownedCount = computed(
-  () => purchasedCounts.value.get(props.book.slug) ?? 0,
+  () => purchasedCounts.value.get(props.book.id) ?? 0,
 );
 
 function onBorrow() {
