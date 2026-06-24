@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useAuthStore } from "~/stores/auth";
+import { useBookStatusStore } from "~/stores/bookStatus";
 import { useBorrows } from "~/composables/useBorrows";
 import { useBooks } from "~/composables/useBooks";
 
@@ -13,13 +14,12 @@ const emit = defineEmits<{
 }>();
 
 const auth = useAuthStore();
+const { borrow, returnBook } = useBookStatusStore();
 
 const {
   borrows,
   borrowsLoaded,
   borrowError,
-  borrowBook,
-  returnBook,
   fetchBorrows,
 } = useBorrows();
 
@@ -43,7 +43,7 @@ const userBorrowedSlugs = computed(() => {
 
 async function onBorrowBook(bookId: string) {
   try {
-    await borrowBook(bookId, "");
+    await borrow(bookId, "");
     props.flash("Book borrowed for 14 days.");
     await fetchBorrows(1);
     refreshTrending();
