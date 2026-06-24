@@ -29,7 +29,7 @@ export interface CommentWithUser extends CommentRow {
 export const COMMENT_REPOSITORY = Symbol('COMMENT_REPOSITORY');
 
 export interface CommentRepository {
-  findByBook(bookId: string): Promise<CommentWithUser[]>;
+  findByBook(bookId: string, tx?: DatabaseOrTransaction): Promise<CommentWithUser[]>;
   findById(commentId: string): Promise<CommentWithUser | null>;
   findRaw(commentId: string): Promise<CommentRow | null>;
   create(data: NewComment, tx?: DatabaseOrTransaction): Promise<CommentRow>;

@@ -78,7 +78,7 @@ export class CommentsService {
         rating: dto.rating ?? null,
       });
 
-      const all = await this.comments.findByBook(bookId);
+      const all = await this.comments.findByBook(bookId, tx);
       const withUser = all.find((r) => r.id === row.id);
       if (!withUser)
         throw new NotFoundException('Comment not found after insert');
