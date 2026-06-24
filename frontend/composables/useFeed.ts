@@ -8,6 +8,11 @@ export interface FeedUser {
   image: string | null
 }
 
+export interface FeedReply {
+  name: string
+  text: string
+}
+
 export interface FeedPost {
   id: string
   text: string
@@ -16,6 +21,7 @@ export interface FeedPost {
   user: FeedUser
   likeCount: number
   replyCount: number
+  replies: FeedReply[]
   liked?: boolean
 }
 
@@ -49,8 +55,8 @@ export function useFeed() {
       }
       const first = trending[0]
       bookSlug.value = first.slug
-      const data = await $fetch<FeedPost[]>(`/api/books/${first.id}/comments`)
-      posts.value = data.slice(0, 3)
+      const raw = await $fetch<Record<string, unknown>[]>(`/api/books/${first.id}/comments`)
+      posts.value = raw.slice(0, 3).map(mapFeedPost)
     } catch (e) {
       error.value = e
       posts.value = []
@@ -99,7 +105,6 @@ export function useFeed() {
 
   onInvalidate('feed', () => fetchFeed())
   fetchFeed()
-
   return {
     posts: readonly(posts),
     bookSlug: readonly(bookSlug),
@@ -109,5 +114,23 @@ export function useFeed() {
     refresh: fetchFeed,
     toggleLike,
     publishReply,
+  }
+}
+
+function mapFeedPost(raw: Record<string, unknown>): FeedPost {
+  const replies = (raw.replies as Record<string, unknown>[] | undefined) ?? []
+  return {
+    id: raw.id as string,
+    text: raw.text as string,
+    rating: (raw.rating as number | null) ?? null,
+    createdAt: raw.createdAt as string,
+    user: raw.user as FeedUser,
+    likeCount: (raw.likeCount as number) ?? 0,
+    replyCount: replies.length,
+    replies: replies.map((r) => ({
+      name: ((r.user as Record<string, unknown>)?.name as string) ?? 'Unknown',
+      text: r.text as string,
+    })),
+    liked: (raw.likedByUser as boolean) ?? false,
   }
 }

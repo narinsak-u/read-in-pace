@@ -14,6 +14,7 @@ const props = defineProps<{
   name: string;
   time: string;
   likeCount: number;
+  liked?: boolean;
   submitting?: boolean;
   replies?: Reply[];
   submitReply: (text: string) => Promise<boolean>;
@@ -22,7 +23,7 @@ const props = defineProps<{
 const auth = useAuthStore();
 const replyOpen = shallowRef(false);
 const replyText = shallowRef("");
-const liked = shallowRef(false);
+const liked = shallowRef(props.liked ?? false);
 const localLikeCount = shallowRef(props.likeCount);
 const showAllReplies = shallowRef(false);
 const optimisticReplies = ref<Reply[]>([]);
@@ -104,10 +105,7 @@ async function postReply() {
             @click="replyOpen = !replyOpen"
           >
             <MessageCircle />
-            Reply
-            <span v-if="mergedReplies.length > 0">
-              ({{ mergedReplies.length }})
-            </span>
+            Reply ({{ mergedReplies.length }})
           </Button>
           <Button
             variant="archivalGhost"
@@ -115,8 +113,7 @@ async function postReply() {
             @click="toggleLike"
             :class="liked ? 'text-primary' : ''"
           >
-            {{ liked ? "Liked" : "Like" }}
-            {{ localLikeCount > 0 ? `(${localLikeCount})` : "" }}
+            {{ liked ? "Liked" : "Like" }} ({{ localLikeCount }})
           </Button>
         </div>
 

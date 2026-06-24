@@ -75,6 +75,8 @@ async function onToggleLike(postId: string) {
         :name="post.user.name"
         :time="timeAgo(post.createdAt)"
         :like-count="post.likeCount"
+        :liked="post.liked"
+        :replies="post.replies"
         :submitting="replySubmittingId === post.id"
         :submit-reply="(text: string) => publishReply(post.id, text)"
       >
