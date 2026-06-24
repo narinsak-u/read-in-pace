@@ -1,9 +1,7 @@
 import { ref, shallowRef, computed, readonly, watch, toValue } from "vue";
 import type { Book } from "~/types/book";
 import { mapBookResponse } from "~/types/book";
-import { useAuthStore } from "~/stores/auth";
 import { useInvalidate } from "~/composables/useInvalidate";
-import { useBorrows } from "~/composables/useBorrows";
 
 export function useBooks(options?: {
   page?: Ref<number> | number;
@@ -13,8 +11,6 @@ export function useBooks(options?: {
   trending?: boolean;
 }) {
   const { invalidate, onInvalidate } = useInvalidate();
-  const auth = useAuthStore();
-  const { borrowedSlugs } = useBorrows();
 
   const trendingMode = options?.trending ?? false;
   const page = ref(options?.page ?? 1);
@@ -87,19 +83,6 @@ export function useBooks(options?: {
     return pages;
   });
 
-  async function borrow(slug: string, bookId: string) {
-    if (!auth.signedIn) throw new Error("not signed in");
-    const { borrowBook } = useBorrows();
-    await borrowBook(bookId, slug);
-    invalidate("books");
-  }
-
-  async function returnBook(slug: string, bookId: string) {
-    const { returnBook: ret } = useBorrows();
-    await ret(bookId, slug);
-    invalidate("books");
-  }
-
   if (trendingMode) {
     fetch();
   } else {
@@ -119,7 +102,5 @@ export function useBooks(options?: {
     loading: readonly(loading),
     error: readonly(error),
     refresh: fetch,
-    borrow,
-    return: returnBook,
   };
 }
