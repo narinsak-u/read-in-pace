@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { BookOpen, Check, ShoppingBag, ShoppingCart } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
+import { storeToRefs } from 'pinia';
 import { useCartStore } from '~/stores/cart';
 import { useAuthStore } from '~/stores/auth';
 import { useBookStatusStore } from '~/stores/bookStatus';
@@ -14,7 +15,9 @@ const props = defineProps<{
 
 const cart = useCartStore();
 const auth = useAuthStore();
-const { borrowedSlugs, purchasedCounts, borrow } = useBookStatusStore();
+const store = useBookStatusStore();
+const { borrowedSlugs, purchasedCounts } = storeToRefs(store);
+const { borrow } = store;
 const purchasing = shallowRef(false);
 
 const isBorrowed = computed(() => borrowedSlugs.value.has(props.book.slug));

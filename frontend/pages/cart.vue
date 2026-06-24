@@ -2,6 +2,7 @@
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
 import { buttonVariants } from '~/components/ui/button/variants';
+import { storeToRefs } from 'pinia';
 import { useCartStore } from '~/stores/cart';
 import { useBookStatusStore } from '~/stores/bookStatus';
 
@@ -11,7 +12,7 @@ definePageMeta({
 });
 
 const cart = useCartStore();
-const { purchasedCounts } = useBookStatusStore();
+const { purchasedCounts } = storeToRefs(useBookStatusStore());
 </script>
 
 <template>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ShoppingBag, Star } from "lucide-vue-next";
 import { Button } from "~/components/ui/button";
+import { storeToRefs } from "pinia";
 import { useCartStore } from "~/stores/cart";
 import { useBookStatusStore } from "~/stores/bookStatus";
 import { stockActions, type StockActions } from "~/utils/stock";
@@ -18,7 +19,7 @@ const emit = defineEmits<{
 }>();
 
 const cart = useCartStore();
-const { purchasedCounts } = useBookStatusStore();
+const { purchasedCounts } = storeToRefs(useBookStatusStore());
 const ownedCount = computed(
   () => purchasedCounts.value.get(props.book.id) ?? 0,
 );

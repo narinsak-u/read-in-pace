@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { stockActions } from "~/utils/stock";
 import { useAuthStore } from "~/stores/auth";
+import { storeToRefs } from "pinia";
 import { useBookStatusStore } from "~/stores/bookStatus";
 import { useBooks } from "~/composables/useBooks";
 
@@ -11,8 +12,9 @@ const props = defineProps<{
 }>();
 
 const auth = useAuthStore();
-const { borrowedSlugs, purchasedCounts, borrow, returnBook } =
-  useBookStatusStore();
+const store = useBookStatusStore();
+const { borrowedSlugs, purchasedCounts } = storeToRefs(store);
+const { borrow, returnBook } = store;
 
 const {
   filtered,
