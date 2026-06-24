@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import { CheckCircle, BookOpen } from "lucide-vue-next";
 import { useAuthStore } from "~/stores/auth";
+import { useBookStatusStore } from "~/stores/bookStatus";
 import { usePurchases } from "~/composables/usePurchases";
 import { useBorrows } from "~/composables/useBorrows";
 import type { BorrowItem } from "~/composables/useBorrows";
@@ -36,9 +37,9 @@ const {
   borrowsLoaded,
   borrowsPage,
   borrowsMeta,
-  returnBook,
   fetchBorrows,
 } = useBorrows();
+const { returnBook } = useBookStatusStore();
 
 const pageNumbers = computed(() => {
   const total = borrowsMeta.value?.totalPages ?? 1;
