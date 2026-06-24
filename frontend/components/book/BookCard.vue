@@ -68,6 +68,9 @@ function onBuy() {
     <p class="text-xs text-muted-foreground">{{ book.author }}</p>
     <div class="mt-1 flex items-center gap-1 text-[10px] text-primary">
       <Star class="size-3 fill-current" /> {{ book.avgRating.toFixed(2) }}
+      <span v-if="book.inStock > 0" class="ml-auto text-muted-foreground">
+        {{ book.inStock }} cop{{ book.inStock > 1 ? "ies" : "y" }} left
+      </span>
     </div>
     <div class="mt-3 flex gap-1">
       <template v-if="actions.isBorrowed">
