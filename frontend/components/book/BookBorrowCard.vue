@@ -3,7 +3,7 @@ import { BookOpen, Check, ShoppingBag, ShoppingCart } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
 import { useCartStore } from '~/stores/cart';
 import { useAuthStore } from '~/stores/auth';
-import { useBorrows } from '~/composables/useBorrows';
+import { useBookStatusStore } from '~/stores/bookStatus';
 import type { Book } from '~/types/book';
 
 const props = defineProps<{
@@ -14,10 +14,13 @@ const props = defineProps<{
 
 const cart = useCartStore();
 const auth = useAuthStore();
-const { borrowedSlugs, borrowBook } = useBorrows();
+const { borrowedSlugs, purchasedCounts, borrow } = useBookStatusStore();
 const purchasing = shallowRef(false);
 
 const isBorrowed = computed(() => borrowedSlugs.value.has(props.book.slug));
+const ownedCount = computed(
+  () => purchasedCounts.value.get(props.book.slug) ?? 0,
+);
 
 async function borrowBookAction() {
   if (!auth.signedIn) {
@@ -25,7 +28,7 @@ async function borrowBookAction() {
     return;
   }
   try {
-    await borrowBook(props.bookId, props.book.slug);
+    await borrow(props.bookId, props.book.slug);
     props.flash(`${props.book.title} is now on your desk.`);
   } catch (e: any) {
     if (e?.status === 401) {
@@ -40,6 +43,12 @@ async function buyNow() {
   if (!auth.signedIn) {
     auth.openAuthModal(() => { void buyNow(); });
     return;
+  }
+  if (ownedCount.value > 0) {
+    const ok = window.confirm(
+      `You already own ${ownedCount.value} cop${ownedCount.value > 1 ? 'ies' : 'y'}. Are you sure you want to buy more?`,
+    );
+    if (!ok) return;
   }
   purchasing.value = true;
   try {
@@ -132,6 +141,9 @@ function addToCart() {
     <p class="mt-2 font-serif text-3xl font-bold">${{ book.price }}</p>
     <p class="mt-1 text-xs text-muted-foreground">
       Hardcover &middot; Ships in 2&ndash;3 days
+    </p>
+    <p v-if="ownedCount > 0" class="mt-1 text-xs text-muted-foreground">
+      You own {{ ownedCount }} cop{{ ownedCount > 1 ? 'ies' : 'y' }}
     </p>
     <Button
       class="mt-4 w-full"
