@@ -148,17 +148,25 @@ function addToCart() {
     <p v-if="ownedCount > 0" class="mt-1 text-xs text-muted-foreground">
       You own {{ ownedCount }} cop{{ ownedCount > 1 ? 'ies' : 'y' }}
     </p>
+    <p
+      v-if="book.inStock > 0 && book.inStock <= 3"
+      class="mt-1 text-xs text-muted-foreground"
+    >
+      Only {{ book.inStock }} cop{{ book.inStock > 1 ? 'ies' : 'y' }} left
+    </p>
     <Button
       class="mt-4 w-full"
       variant="archival"
-      :disabled="purchasing"
+      :disabled="purchasing || book.inStock <= 1"
       @click="buyNow"
     >
-      <ShoppingBag /> {{ purchasing ? 'Redirecting...' : 'Buy now' }}
+      <ShoppingBag />
+      {{ purchasing ? 'Redirecting...' : book.inStock <= 1 ? 'Out of stock' : 'Buy now' }}
     </Button>
     <Button
       class="mt-2 w-full"
       variant="archivalOutline"
+      :disabled="book.inStock <= 1"
       @click="addToCart"
     >
       <ShoppingCart /> Add to cart
