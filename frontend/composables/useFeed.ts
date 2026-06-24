@@ -62,9 +62,9 @@ export function useFeed() {
       bookSlug.value = first.slug;
       bookId.value = first.id;
       const raw = await $fetch<Record<string, unknown>[]>(
-        `/api/books/${first.id}/comments`,
+        `/api/books/${first.id}/comments?limit=3`,
       );
-      posts.value = raw.slice(0, 3).map(mapFeedPost);
+      posts.value = raw.map(mapFeedPost);
     } catch (e) {
       error.value = e;
       posts.value = [];

@@ -43,6 +43,10 @@ async function onReply(postId: string, text: string): Promise<boolean> {
     replySubmittingId.value = null;
   }
 }
+
+function onToggleLike(postId: string): () => Promise<void> {
+  return () => toggleLike(postId);
+}
 </script>
 
 <template>
@@ -80,6 +84,7 @@ async function onReply(postId: string, text: string): Promise<boolean> {
         :replies="post.replies"
         :submitting="replySubmittingId === post.id"
         :submit-reply="(text: string) => onReply(post.id, text)"
+        :toggle-like="onToggleLike(post.id)"
       >
         <span v-if="post.rating" class="text-primary">
           {{ "★".repeat(post.rating) }}

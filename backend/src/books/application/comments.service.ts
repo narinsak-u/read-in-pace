@@ -23,7 +23,7 @@ export class CommentsService {
     @Inject(DATABASE) private readonly db: Database,
   ) {}
 
-  async findByBook(bookId: string, currentUserId?: string) {
+  async findByBook(bookId: string, currentUserId?: string, limit?: number) {
     const rows = await this.comments.findByBook(bookId);
     const ids = rows.map((c) => c.id);
     const likeCountMap = await this.comments.countLikesFor(ids);
@@ -40,9 +40,16 @@ export class CommentsService {
     const topLevel = rows.filter((c) => !c.parentId);
     const replies = rows.filter((c) => c.parentId);
 
-    return topLevel.map((comment) => ({
+    const limitedTopLevel =
+      limit && limit > 0 ? topLevel.slice(0, limit) : topLevel;
+    const topIds = new Set(limitedTopLevel.map((c) => c.id));
+    const limitedReplies = replies.filter((r) => topIds.has(r.parentId!));
+
+    return limitedTopLevel.map((comment) => ({
       ...attach(comment),
-      replies: replies.filter((r) => r.parentId === comment.id).map(attach),
+      replies: limitedReplies
+        .filter((r) => r.parentId === comment.id)
+        .map(attach),
     }));
   }
 

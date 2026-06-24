@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { desc, eq, sql } from 'drizzle-orm';
+import { desc, eq, inArray, sql } from 'drizzle-orm';
 import { DATABASE, type Database } from '../../core/database/database.provider';
 import * as schema from '../../core/database/schema';
 import type { BookReadModel } from '../domain/book.repository';
@@ -78,7 +78,7 @@ export class DrizzleBookReadModel implements BookReadModel {
     const rows = (await this.db
       .select(bookWithMeta)
       .from(schema.books)
-      .where(sql`${schema.books.id} = ANY(${ids})`)) as BookProjection[];
+      .where(inArray(schema.books.id, ids))) as BookProjection[];
     return new Map(rows.map((r) => [r.id, r]));
   }
 

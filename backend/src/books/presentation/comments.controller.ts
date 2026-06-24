@@ -5,6 +5,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard, OptionalAuthGuard } from '../../iam/auth/auth.guard';
@@ -21,8 +22,17 @@ export class CommentsController {
 
   @Get()
   @UseGuards(OptionalAuthGuard)
-  findAll(@Param('id') id: string, @CurrentUser() user?: { id: string }) {
-    return this.commentsService.findByBook(id, user?.id);
+  findAll(
+    @Param('id') id: string,
+    @Query('limit') limit?: string,
+    @CurrentUser() user?: { id: string },
+  ) {
+    const parsedLimit = limit ? parseInt(limit, 10) : undefined;
+    return this.commentsService.findByBook(
+      id,
+      user?.id,
+      Number.isNaN(parsedLimit) ? undefined : parsedLimit,
+    );
   }
 
   @Post()

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Button } from "~/components/ui/button";
+import { useAuthStore } from "~/stores/auth";
 
 interface Review {
   id: string;
@@ -26,6 +27,7 @@ const emit = defineEmits<{
   "cancel-reply": [];
 }>();
 
+const auth = useAuthStore();
 const replyText = shallowRef("");
 </script>
 
@@ -78,6 +80,7 @@ const replyText = shallowRef("");
           </p>
         </div>
         <div v-if="isReplying" class="mt-4">
+          <template v-if="auth.signedIn">
           <textarea
             v-model="replyText"
             rows="2"
@@ -103,6 +106,7 @@ const replyText = shallowRef("");
               Post Reply
             </Button>
           </div>
+          </template>
         </div>
       </div>
     </div>

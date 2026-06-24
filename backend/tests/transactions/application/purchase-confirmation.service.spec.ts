@@ -1,12 +1,31 @@
 import { Test } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import { PurchaseConfirmationService } from '../../../src/transactions/application/purchase-confirmation.service';
-import { BOOK_REPOSITORY, BOOK_READ_MODEL, type BookRepository, type BookReadModel } from '../../../src/books/domain/book.repository';
-import { PURCHASE_REPOSITORY, type PurchaseRepository, type PurchaseRow } from '../../../src/transactions/domain/purchase';
-import { STRIPE, type StripeClient } from '../../../src/transactions/infrastructure/stripe.provider';
-import { DATABASE, type Database } from '../../../src/core/database/database.provider';
+import {
+  BOOK_REPOSITORY,
+  BOOK_READ_MODEL,
+  type BookRepository,
+  type BookReadModel,
+} from '../../../src/books/domain/book.repository';
+import {
+  PURCHASE_REPOSITORY,
+  type PurchaseRepository,
+  type PurchaseRow,
+} from '../../../src/transactions/domain/purchase';
+import {
+  STRIPE,
+  type StripeClient,
+} from '../../../src/transactions/infrastructure/stripe.provider';
+import {
+  DATABASE,
+  type Database,
+} from '../../../src/core/database/database.provider';
 
-const fakePurchase = (id: string, bookId: string, userId: string): PurchaseRow => ({
+const fakePurchase = (
+  id: string,
+  bookId: string,
+  userId: string,
+): PurchaseRow => ({
   id,
   bookId,
   userId,
@@ -43,13 +62,13 @@ describe('PurchaseConfirmationService', () => {
       incrementStock: jest.fn(),
       decrementStock: jest.fn(),
       acquireLockForBorrow: jest.fn(),
-    } as unknown as jest.Mocked<BookRepository>;
+    };
 
     purchases = {
       findExisting: jest.fn(),
       record: jest.fn(),
       listForUser: jest.fn(),
-    } as unknown as jest.Mocked<PurchaseRepository>;
+    };
 
     readModel = {
       findFullById: jest.fn(),
@@ -59,7 +78,7 @@ describe('PurchaseConfirmationService', () => {
       getTrending: jest.fn(),
       attachToBorrows: jest.fn(),
       attachToPurchases: jest.fn(),
-    } as unknown as jest.Mocked<BookReadModel>;
+    };
 
     stripe = {
       checkout: {
@@ -71,7 +90,7 @@ describe('PurchaseConfirmationService', () => {
 
     db = {
       transaction: jest.fn().mockImplementation((cb) => cb(mockTx)),
-    } as unknown as jest.Mocked<Database>;
+    };
 
     const mod = await Test.createTestingModule({
       providers: [
@@ -89,7 +108,7 @@ describe('PurchaseConfirmationService', () => {
 
   describe('confirm', () => {
     it('confirms a single-book purchase', async () => {
-      stripe.checkout.sessions.retrieve.mockResolvedValue(baseSession as never);
+      stripe.checkout.sessions.retrieve.mockResolvedValue(baseSession);
       purchases.findExisting.mockResolvedValue(null);
       purchases.record.mockResolvedValue(fakePurchase('p1', 'b1', 'u1'));
 
@@ -106,19 +125,23 @@ describe('PurchaseConfirmationService', () => {
       stripe.checkout.sessions.retrieve.mockResolvedValue({
         payment_status: 'unpaid',
         metadata: { userId: 'u1', bookId: 'b1' },
-      } as never);
+      });
 
-      await expect(svc.confirm('cs_1', 'u1')).rejects.toBeInstanceOf(BadRequestException);
+      await expect(svc.confirm('cs_1', 'u1')).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
     });
 
     it('rejects when userId does not match', async () => {
-      stripe.checkout.sessions.retrieve.mockResolvedValue(baseSession as never);
+      stripe.checkout.sessions.retrieve.mockResolvedValue(baseSession);
 
-      await expect(svc.confirm('cs_1', 'u2')).rejects.toBeInstanceOf(BadRequestException);
+      await expect(svc.confirm('cs_1', 'u2')).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
     });
 
     it('confirms a batch purchase from cart', async () => {
-      stripe.checkout.sessions.retrieve.mockResolvedValue(baseBatchSession as never);
+      stripe.checkout.sessions.retrieve.mockResolvedValue(baseBatchSession);
       purchases.findExisting.mockResolvedValue(null);
       purchases.record.mockResolvedValue(fakePurchase('p1', 'b1', 'u1'));
 
@@ -130,7 +153,7 @@ describe('PurchaseConfirmationService', () => {
     });
 
     it('skips already-purchased books in a batch', async () => {
-      stripe.checkout.sessions.retrieve.mockResolvedValue(baseBatchSession as never);
+      stripe.checkout.sessions.retrieve.mockResolvedValue(baseBatchSession);
       purchases.findExisting.mockResolvedValueOnce({ id: 'existing' });
       purchases.findExisting.mockResolvedValueOnce(null);
       purchases.record.mockResolvedValue(fakePurchase('p2', 'b2', 'u1'));
@@ -146,9 +169,11 @@ describe('PurchaseConfirmationService', () => {
       stripe.checkout.sessions.retrieve.mockResolvedValue({
         payment_status: 'paid',
         metadata: { userId: 'u1' },
-      } as never);
+      });
 
-      await expect(svc.confirm('cs_empty', 'u1')).rejects.toBeInstanceOf(BadRequestException);
+      await expect(svc.confirm('cs_empty', 'u1')).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
     });
   });
 

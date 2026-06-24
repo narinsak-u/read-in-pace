@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, isNull, sql } from 'drizzle-orm';
+import { and, asc, count, eq, inArray, isNull } from 'drizzle-orm';
 import {
   DATABASE,
   type Database,
@@ -99,7 +99,7 @@ export class DrizzleBorrowRepository implements BorrowRepository {
           isNull(schema.borrows.returnedAt),
         ),
       )
-      .orderBy(sql`${schema.borrows.borrowedAt} DESC`)
+      .orderBy(asc(schema.borrows.borrowedAt))
       .limit(limit)
       .offset(offset);
 
@@ -114,6 +114,6 @@ export class DrizzleBorrowRepository implements BorrowRepository {
     return this.db
       .select()
       .from(schema.borrows)
-      .where(sql`${schema.borrows.id} = ANY(${ids})`);
+      .where(inArray(schema.borrows.id, ids));
   }
 }

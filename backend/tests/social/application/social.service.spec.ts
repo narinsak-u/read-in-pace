@@ -1,7 +1,10 @@
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { SocialService } from '../../../src/social/application/social.service';
-import { POST_REPOSITORY, type PostRepository } from '../../../src/social/domain/post';
+import {
+  POST_REPOSITORY,
+  type PostRepository,
+} from '../../../src/social/domain/post';
 
 describe('SocialService', () => {
   let svc: SocialService;
@@ -16,13 +19,10 @@ describe('SocialService', () => {
       isLikedBy: jest.fn(),
       getReplies: jest.fn(),
       createReply: jest.fn(),
-    } as unknown as jest.Mocked<PostRepository>;
+    };
 
     const mod = await Test.createTestingModule({
-      providers: [
-        SocialService,
-        { provide: POST_REPOSITORY, useValue: posts },
-      ],
+      providers: [SocialService, { provide: POST_REPOSITORY, useValue: posts }],
     }).compile();
 
     svc = mod.get<SocialService>(SocialService);
@@ -120,7 +120,9 @@ describe('SocialService', () => {
 
     it('throws NotFoundException when the post does not exist', async () => {
       posts.findById.mockResolvedValue(null);
-      await expect(svc.createReply('missing', 'u1', 'hey')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(
+        svc.createReply('missing', 'u1', 'hey'),
+      ).rejects.toBeInstanceOf(NotFoundException);
       expect(posts.createReply).not.toHaveBeenCalled();
     });
   });

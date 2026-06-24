@@ -37,7 +37,10 @@ export function useBooks(options?: {
           "/api/books/trending",
         );
       } else {
-        rawPage.value = await $fetch("/api/books", {
+        rawPage.value = await $fetch<{
+          data: Record<string, unknown>[];
+          meta: { page: number; limit: number; total: number; totalPages: number };
+        }>("/api/books", {
           query: {
             page: page.value,
             limit: limit.value,

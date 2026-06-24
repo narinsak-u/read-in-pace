@@ -65,7 +65,7 @@ function onBuy() {
     >
       <NuxtLink :to="`/book/${book.slug}`">{{ book.title }}</NuxtLink>
     </h3>
-    <p class="text-xs text-muted-foreground">{{ book.author }}</p>
+    <p class="text-xs text-muted-foreground my-1">{{ book.author }}</p>
     <div class="mt-1 flex items-center gap-1 text-[10px] text-primary">
       <Star class="size-3 fill-current" /> {{ book.avgRating.toFixed(2) }}
       <span v-if="book.inStock > 0" class="ml-auto text-muted-foreground">

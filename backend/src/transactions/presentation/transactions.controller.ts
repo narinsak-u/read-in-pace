@@ -73,11 +73,13 @@ export class TransactionsController {
     @CurrentUser() user: { id: string },
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('sort') sort?: string,
   ) {
     return this.borrows.listForUser(
       user.id,
       page ? Number(page) : 1,
       limit ? Number(limit) : 3,
+      sort,
     );
   }
 

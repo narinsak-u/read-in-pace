@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Heart, MessageCircle } from 'lucide-vue-next';
-import { Button } from '~/components/ui/button';
-import { useBook } from '~/composables/useBook';
-import { useAuthStore } from '~/stores/auth';
-import type { Book } from '~/types/book';
+import { Heart, MessageCircle } from "lucide-vue-next";
+import { Button } from "~/components/ui/button";
+import { useBook } from "~/composables/useBook";
+import { useAuthStore } from "~/stores/auth";
+import type { Book } from "~/types/book";
 
 const props = defineProps<{
   book: Book;
@@ -13,16 +13,12 @@ const props = defineProps<{
 
 const auth = useAuthStore();
 
-const {
-  liked,
-  likeCount,
-  userRating,
-  toggleLike,
-  setRating,
-} = useBook(() => props.bookId);
+const { liked, likeCount, userRating, toggleLike, setRating } = useBook(
+  () => props.bookId,
+);
 
 function scrollTo(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 }
 </script>
 
@@ -31,7 +27,9 @@ function scrollTo(id: string) {
     <div
       class="mb-5 flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
     >
-      <span>{{ book.year }}</span><span>&bull;</span><span>{{ book.totalPages }} pages</span><span>&bull;</span>
+      <span>{{ book.year }}</span
+      ><span>&bull;</span><span>{{ book.totalPages }} pages</span
+      ><span>&bull;</span>
       <span>Shelf {{ book.shelf }}</span>
     </div>
     <h1
@@ -44,43 +42,26 @@ function scrollTo(id: string) {
     </p>
     <div class="mt-7 flex items-center gap-3">
       <span class="text-lg text-primary">
-        {{ '★'.repeat(Math.round(book.avgRating)) }}<span class="text-foreground/10">{{ '★'.repeat(5 - Math.round(book.avgRating)) }}</span>
+        {{ "★".repeat(Math.round(book.avgRating))
+        }}<span class="text-foreground/10">{{
+          "★".repeat(5 - Math.round(book.avgRating))
+        }}</span>
       </span>
       <strong>{{ book.avgRating.toFixed(2) }}</strong>
       <span class="text-sm text-muted-foreground"
         >from {{ book.ratingsCount }} reader ratings</span
       >
     </div>
-    <div v-if="auth.signedIn" class="mt-4 flex items-center gap-2">
-      <span class="font-mono text-[10px] uppercase text-muted-foreground">Your rating</span>
-      <span class="flex gap-0.5">
-          <button
-            v-for="star in 5"
-            :key="star"
-            class="cursor-pointer text-lg transition-colors hover:text-primary"
-          :class="(userRating ?? 0) >= star ? 'text-primary' : 'text-foreground/20'"
-          @click="setRating(star)"
-        >
-          ★
-        </button>
-      </span>
-      <span v-if="userRating" class="text-xs text-muted-foreground">({{ userRating }}/5)</span>
-    </div>
-    <div class="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
-      <span class="flex items-center gap-1">
-        <Heart class="size-4" /> {{ likeCount }} {{ likeCount === 1 ? 'like' : 'likes' }}
-      </span>
-      <span class="flex items-center gap-1">
-        <MessageCircle class="size-4" /> {{ book.commentCount }} {{ book.commentCount === 1 ? 'comment' : 'comments' }}
-      </span>
-    </div>
     <p class="mt-8 max-w-2xl text-base leading-7 text-foreground/75">
       {{ book.synopsis }}
     </p>
     <div class="mt-8 flex flex-wrap gap-3">
-      <Button variant="archivalGhost" @click="toggleLike">
+      <Button
+        variant="archivalGhost"
+        @click="flash('This feature is coming soon!')"
+      >
         <Heart :class="liked ? 'fill-current text-primary' : ''" />
-        {{ liked ? 'Liked' : 'Save to list' }}
+        Save to list
       </Button>
       <Button variant="archivalGhost" @click="scrollTo('discussion')">
         <MessageCircle /> Read discussion

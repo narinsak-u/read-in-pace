@@ -14,7 +14,11 @@ import {
   type LikeRepository,
   type RatingRepository,
 } from '../../../src/books/domain/engagement';
-import type { BookRow, NewBook, UpdateBook } from '../../../src/books/domain/book';
+import type {
+  BookRow,
+  NewBook,
+  UpdateBook,
+} from '../../../src/books/domain/book';
 
 const fakeBookRow = (id: string): BookRow => ({
   id,
@@ -69,7 +73,7 @@ describe('BooksService', () => {
       incrementStock: jest.fn(),
       decrementStock: jest.fn(),
       acquireLockForBorrow: jest.fn(),
-    } as unknown as jest.Mocked<BookRepository>;
+    };
 
     readModel = {
       findFullById: jest.fn(),
@@ -79,19 +83,19 @@ describe('BooksService', () => {
       getTrending: jest.fn(),
       attachToBorrows: jest.fn(),
       attachToPurchases: jest.fn(),
-    } as unknown as jest.Mocked<BookReadModel>;
+    };
 
     likes = {
       isLikedBy: jest.fn(),
       toggle: jest.fn(),
-    } as unknown as jest.Mocked<LikeRepository>;
+    };
 
     ratings = {
       findUserRating: jest.fn(),
       upsert: jest.fn(),
       recordFromComment: jest.fn(),
       getAvgForBook: jest.fn(),
-    } as unknown as jest.Mocked<RatingRepository>;
+    };
 
     const mod = await Test.createTestingModule({
       providers: [
@@ -111,13 +115,21 @@ describe('BooksService', () => {
       readModel.findFullPaginated.mockResolvedValue(paginatedResult([]));
       const result = await svc.findAll(1, 20, 'Fiction');
       expect(result).toEqual(paginatedResult([]));
-      expect(readModel.findFullPaginated).toHaveBeenCalledWith(1, 20, 'Fiction');
+      expect(readModel.findFullPaginated).toHaveBeenCalledWith(
+        1,
+        20,
+        'Fiction',
+      );
     });
 
     it('omits category when not provided', async () => {
       readModel.findFullPaginated.mockResolvedValue(paginatedResult([]));
       await svc.findAll(2, 10);
-      expect(readModel.findFullPaginated).toHaveBeenCalledWith(2, 10, undefined);
+      expect(readModel.findFullPaginated).toHaveBeenCalledWith(
+        2,
+        10,
+        undefined,
+      );
     });
   });
 

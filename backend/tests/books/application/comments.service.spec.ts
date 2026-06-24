@@ -5,9 +5,19 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CommentsService } from '../../../src/books/application/comments.service';
-import { COMMENT_REPOSITORY, type CommentRepository, type CommentWithUser } from '../../../src/books/domain/comment';
-import { RATING_REPOSITORY, type RatingRepository } from '../../../src/books/domain/engagement';
-import { DATABASE, type Database } from '../../../src/core/database/database.provider';
+import {
+  COMMENT_REPOSITORY,
+  type CommentRepository,
+  type CommentWithUser,
+} from '../../../src/books/domain/comment';
+import {
+  RATING_REPOSITORY,
+  type RatingRepository,
+} from '../../../src/books/domain/engagement';
+import {
+  DATABASE,
+  type Database,
+} from '../../../src/core/database/database.provider';
 import type { CreateCommentDto } from '../../../src/books/presentation/dto/create-comment.dto';
 
 const makeComment = (
@@ -46,18 +56,18 @@ describe('CommentsService', () => {
       likedSetFor: jest.fn(),
       like: jest.fn(),
       unlike: jest.fn(),
-    } as unknown as jest.Mocked<CommentRepository>;
+    };
 
     ratings = {
       findUserRating: jest.fn(),
       upsert: jest.fn(),
       recordFromComment: jest.fn(),
       getAvgForBook: jest.fn(),
-    } as unknown as jest.Mocked<RatingRepository>;
+    };
 
     db = {
       transaction: jest.fn().mockImplementation((cb) => cb(mockTx)),
-    } as unknown as jest.Mocked<Database>;
+    };
 
     const mod = await Test.createTestingModule({
       providers: [
@@ -127,13 +137,21 @@ describe('CommentsService', () => {
 
     it('creates a top-level comment and records rating in a transaction', async () => {
       comments.create.mockResolvedValue(makeComment('c1', 'b1', 'u1', null));
-      comments.findByBook.mockResolvedValue([makeComment('c1', 'b1', 'u1', null)]);
+      comments.findByBook.mockResolvedValue([
+        makeComment('c1', 'b1', 'u1', null),
+      ]);
 
       const result = await svc.create('b1', 'u1', dto);
 
       expect(db.transaction).toHaveBeenCalled();
       expect(comments.create).toHaveBeenCalledWith(
-        { bookId: 'b1', userId: 'u1', text: 'Great book!', parentId: null, rating: null },
+        {
+          bookId: 'b1',
+          userId: 'u1',
+          text: 'Great book!',
+          parentId: null,
+          rating: null,
+        },
         mockTx,
       );
       expect(ratings.recordFromComment).toHaveBeenCalledWith(mockTx, {
@@ -156,15 +174,23 @@ describe('CommentsService', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      const replyDto: CreateCommentDto = { text: 'reply', parentId: 'c1', rating: 4 };
-      await expect(svc.create('b1', 'u1', replyDto)).rejects.toBeInstanceOf(BadRequestException);
+      const replyDto: CreateCommentDto = {
+        text: 'reply',
+        parentId: 'c1',
+        rating: 4,
+      };
+      await expect(svc.create('b1', 'u1', replyDto)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
     });
 
     it('throws NotFoundException when parent comment does not exist', async () => {
       comments.findRaw.mockResolvedValue(null);
       const replyDto: CreateCommentDto = { text: 'reply', parentId: 'missing' };
 
-      await expect(svc.create('b1', 'u1', replyDto)).rejects.toBeInstanceOf(NotFoundException);
+      await expect(svc.create('b1', 'u1', replyDto)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
       expect(comments.findRaw).toHaveBeenCalledWith('missing');
     });
 
@@ -181,7 +207,9 @@ describe('CommentsService', () => {
       });
       const replyDto: CreateCommentDto = { text: 'reply', parentId: 'c1' };
 
-      await expect(svc.create('b1', 'u1', replyDto)).rejects.toBeInstanceOf(BadRequestException);
+      await expect(svc.create('b1', 'u1', replyDto)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
     });
 
     it('creates a reply when parent is valid and belongs to the same book', async () => {
@@ -197,12 +225,20 @@ describe('CommentsService', () => {
       });
       const replyDto: CreateCommentDto = { text: 'reply', parentId: 'c1' };
       comments.create.mockResolvedValue(makeComment('r1', 'b1', 'u1', 'c1'));
-      comments.findByBook.mockResolvedValue([makeComment('r1', 'b1', 'u1', 'c1')]);
+      comments.findByBook.mockResolvedValue([
+        makeComment('r1', 'b1', 'u1', 'c1'),
+      ]);
 
       const result = await svc.create('b1', 'u1', replyDto);
 
       expect(comments.create).toHaveBeenCalledWith(
-        { bookId: 'b1', userId: 'u1', text: 'reply', parentId: 'c1', rating: null },
+        {
+          bookId: 'b1',
+          userId: 'u1',
+          text: 'reply',
+          parentId: 'c1',
+          rating: null,
+        },
         mockTx,
       );
       expect(ratings.recordFromComment).toHaveBeenCalledWith(mockTx, {
@@ -243,13 +279,17 @@ describe('CommentsService', () => {
         updatedAt: new Date(),
       });
 
-      await expect(svc.remove('c1', 'u1')).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(svc.remove('c1', 'u1')).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
       expect(comments.delete).not.toHaveBeenCalled();
     });
 
     it('throws NotFoundException when comment does not exist', async () => {
       comments.findRaw.mockResolvedValue(null);
-      await expect(svc.remove('missing', 'u1')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(svc.remove('missing', 'u1')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 

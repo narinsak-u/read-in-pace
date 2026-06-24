@@ -44,6 +44,7 @@ export interface BorrowRepository {
     userId: string,
     page: number,
     limit: number,
+    sort?: string,
   ): Promise<{ borrowIds: string[]; total: number }>;
   findByIds(ids: string[]): Promise<BorrowRow[]>;
 }

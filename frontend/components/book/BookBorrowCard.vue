@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { BookOpen, Check, ShoppingBag, ShoppingCart } from 'lucide-vue-next';
-import { Button } from '~/components/ui/button';
-import { storeToRefs } from 'pinia';
-import { useCartStore } from '~/stores/cart';
-import { useAuthStore } from '~/stores/auth';
-import { useBookStatusStore } from '~/stores/bookStatus';
-import type { Book } from '~/types/book';
+import { BookOpen, Check, ShoppingBag, ShoppingCart } from "lucide-vue-next";
+import { Button } from "~/components/ui/button";
+import { storeToRefs } from "pinia";
+import { useCartStore } from "~/stores/cart";
+import { useAuthStore } from "~/stores/auth";
+import { useBookStatusStore } from "~/stores/bookStatus";
+import type { Book } from "~/types/book";
 
 const props = defineProps<{
   book: Book;
@@ -21,13 +21,13 @@ const { borrow } = store;
 const purchasing = shallowRef(false);
 
 const isBorrowed = computed(() => borrowedSlugs.value.has(props.book.slug));
-const ownedCount = computed(
-  () => purchasedCounts.value.get(props.bookId) ?? 0,
-);
+const ownedCount = computed(() => purchasedCounts.value.get(props.bookId) ?? 0);
 
 async function borrowBookAction() {
   if (!auth.signedIn) {
-    auth.openAuthModal(() => { void borrowBookAction(); });
+    auth.openAuthModal(() => {
+      void borrowBookAction();
+    });
     return;
   }
   try {
@@ -35,21 +35,25 @@ async function borrowBookAction() {
     props.flash(`${props.book.title} is now on your desk.`);
   } catch (e: any) {
     if (e?.status === 401) {
-      auth.openAuthModal(() => { void borrowBookAction(); });
+      auth.openAuthModal(() => {
+        void borrowBookAction();
+      });
     } else {
-      props.flash(e?.data?.message || 'Could not borrow the book.');
+      props.flash(e?.data?.message || "Could not borrow the book.");
     }
   }
 }
 
 async function buyNow() {
   if (!auth.signedIn) {
-    auth.openAuthModal(() => { void buyNow(); });
+    auth.openAuthModal(() => {
+      void buyNow();
+    });
     return;
   }
   if (ownedCount.value > 0) {
     const ok = window.confirm(
-      `You already own ${ownedCount.value} cop${ownedCount.value > 1 ? 'ies' : 'y'}. Are you sure you want to buy more?`,
+      `You already own ${ownedCount.value} cop${ownedCount.value > 1 ? "ies" : "y"}. Are you sure you want to buy more?`,
     );
     if (!ok) return;
   }
@@ -57,14 +61,16 @@ async function buyNow() {
   try {
     const res = await $fetch<{ url: string }>(
       `/api/books/${props.bookId}/create-checkout-session`,
-      { method: 'POST' },
+      { method: "POST" },
     );
     await navigateTo(res.url, { external: true });
   } catch (e: any) {
     if (e?.status === 401) {
-      auth.openAuthModal(() => { void buyNow(); });
+      auth.openAuthModal(() => {
+        void buyNow();
+      });
     } else {
-      props.flash(e?.data?.message || 'Could not start checkout.');
+      props.flash(e?.data?.message || "Could not start checkout.");
     }
   } finally {
     purchasing.value = false;
@@ -86,30 +92,32 @@ function addToCart() {
 
 <template>
   <aside class="self-center border border-border bg-card p-6 shadow-sm">
-    <p class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+    <p
+      class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground"
+    >
       Borrowing status
     </p>
-    <div class="mt-4 flex items-start gap-3">
+    <div class="mt-4 flex items-baseline gap-3">
       <span
-        :class="`mt-1 size-2 rounded-full ${book.inStock > 0 ? 'bg-primary' : 'bg-muted-foreground'}`"
+        :class="`size-2 rounded-full ${book.inStock > 0 ? 'bg-primary' : 'bg-muted-foreground'}`"
       />
       <div>
         <p class="font-medium">
           {{
             isBorrowed
-              ? 'On your desk'
+              ? "On your desk"
               : book.inStock > 0
-                ? 'Available now'
-                : 'Currently checked out'
+                ? "Available now"
+                : "Currently checked out"
           }}
         </p>
         <p class="mt-1 text-xs leading-5 text-muted-foreground">
           {{
             isBorrowed
-              ? 'Due in 14 days'
+              ? "Due in 14 days"
               : book.inStock > 0
-                ? `${book.inStock} ${book.inStock === 1 ? 'copy' : 'copies'} ready to borrow`
-                : 'Join the waitlist to be notified'
+                ? `${book.inStock} ${book.inStock === 1 ? "copy" : "copies"} ready to borrow`
+                : "Join the waitlist to be notified"
           }}
         </p>
       </div>
@@ -123,10 +131,10 @@ function addToCart() {
       <BookOpen />
       {{
         isBorrowed
-          ? 'Borrowed'
+          ? "Borrowed"
           : book.inStock > 0
-            ? 'Borrow for 14 days'
-            : 'Join waitlist'
+            ? "Borrow for 14 days"
+            : "Join waitlist"
       }}
     </Button>
     <div
@@ -138,7 +146,9 @@ function addToCart() {
 
     <div class="my-6 border-t border-border" />
 
-    <p class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+    <p
+      class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground"
+    >
       Keep a copy
     </p>
     <p class="mt-2 font-serif text-3xl font-bold">${{ book.price }}</p>
@@ -146,13 +156,13 @@ function addToCart() {
       Hardcover &middot; Ships in 2&ndash;3 days
     </p>
     <p v-if="ownedCount > 0" class="mt-1 text-xs text-muted-foreground">
-      You own {{ ownedCount }} cop{{ ownedCount > 1 ? 'ies' : 'y' }}
+      You own {{ ownedCount }} cop{{ ownedCount > 1 ? "ies" : "y" }}
     </p>
     <p
       v-if="book.inStock > 0 && book.inStock <= 3"
       class="mt-1 text-xs text-muted-foreground"
     >
-      Only {{ book.inStock }} cop{{ book.inStock > 1 ? 'ies' : 'y' }} left
+      Only {{ book.inStock }} cop{{ book.inStock > 1 ? "ies" : "y" }} left
     </p>
     <Button
       class="mt-4 w-full"
@@ -161,7 +171,13 @@ function addToCart() {
       @click="buyNow"
     >
       <ShoppingBag />
-      {{ purchasing ? 'Redirecting...' : book.inStock <= 1 ? 'Out of stock' : 'Buy now' }}
+      {{
+        purchasing
+          ? "Redirecting..."
+          : book.inStock <= 1
+            ? "Out of stock"
+            : "Buy now"
+      }}
     </Button>
     <Button
       class="mt-2 w-full"

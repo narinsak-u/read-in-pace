@@ -1,9 +1,22 @@
 import { Test } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { BorrowsService } from '../../../src/transactions/application/borrows.service';
-import { BOOK_REPOSITORY, BOOK_READ_MODEL, type BookRepository, type BookReadModel, type BookProjection } from '../../../src/books/domain/book.repository';
-import { BORROW_REPOSITORY, type BorrowRepository, type BorrowRow } from '../../../src/transactions/domain/borrow';
-import { DATABASE, type Database } from '../../../src/core/database/database.provider';
+import {
+  BOOK_REPOSITORY,
+  BOOK_READ_MODEL,
+  type BookRepository,
+  type BookReadModel,
+  type BookProjection,
+} from '../../../src/books/domain/book.repository';
+import {
+  BORROW_REPOSITORY,
+  type BorrowRepository,
+  type BorrowRow,
+} from '../../../src/transactions/domain/borrow';
+import {
+  DATABASE,
+  type Database,
+} from '../../../src/core/database/database.provider';
 import type { BookRow } from '../../../src/books/domain/book';
 
 const baseBook = (id: string, inStock = 3): BookRow => ({
@@ -59,7 +72,7 @@ describe('BorrowsService', () => {
       incrementStock: jest.fn(),
       decrementStock: jest.fn(),
       acquireLockForBorrow: jest.fn(),
-    } as unknown as jest.Mocked<BookRepository>;
+    };
 
     borrows = {
       findActiveBorrow: jest.fn(),
@@ -67,7 +80,7 @@ describe('BorrowsService', () => {
       markReturned: jest.fn(),
       listActiveByUser: jest.fn(),
       findByIds: jest.fn(),
-    } as unknown as jest.Mocked<BorrowRepository>;
+    };
 
     readModel = {
       findFullById: jest.fn(),
@@ -77,11 +90,11 @@ describe('BorrowsService', () => {
       getTrending: jest.fn(),
       attachToBorrows: jest.fn(),
       attachToPurchases: jest.fn(),
-    } as unknown as jest.Mocked<BookReadModel>;
+    };
 
     db = {
       transaction: jest.fn().mockImplementation((cb) => cb(mockTx)),
-    } as unknown as jest.Mocked<Database>;
+    };
 
     const mod = await Test.createTestingModule({
       providers: [
@@ -124,18 +137,24 @@ describe('BorrowsService', () => {
 
     it('throws NotFoundException when book does not exist', async () => {
       books.acquireLockForBorrow.mockResolvedValue(null);
-      await expect(svc.borrow('missing', 'u1')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(svc.borrow('missing', 'u1')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
 
     it('throws BadRequestException when book is not available', async () => {
       books.acquireLockForBorrow.mockResolvedValue(baseBook('b1', 0));
-      await expect(svc.borrow('b1', 'u1')).rejects.toBeInstanceOf(BadRequestException);
+      await expect(svc.borrow('b1', 'u1')).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
     });
 
     it('throws BadRequestException when already borrowed', async () => {
       books.acquireLockForBorrow.mockResolvedValue(baseBook('b1', 3));
       borrows.findActiveBorrow.mockResolvedValue({ id: 'br1' });
-      await expect(svc.borrow('b1', 'u1')).rejects.toBeInstanceOf(BadRequestException);
+      await expect(svc.borrow('b1', 'u1')).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
     });
 
     it('sets isAvailable to false when stock drops to 1', async () => {
@@ -172,7 +191,9 @@ describe('BorrowsService', () => {
 
     it('throws BadRequestException when no active borrow', async () => {
       borrows.findActiveBorrow.mockResolvedValue(null);
-      await expect(svc.returnBook('b1', 'u1')).rejects.toBeInstanceOf(BadRequestException);
+      await expect(svc.returnBook('b1', 'u1')).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
     });
   });
 
@@ -181,13 +202,31 @@ describe('BorrowsService', () => {
       const br1 = baseBorrow('br1', 'b1', 'u1');
       const br2 = baseBorrow('br2', 'b2', 'u1');
 
-      borrows.listActiveByUser.mockResolvedValue({ borrowIds: ['br1', 'br2'], total: 2 });
-      borrows.findByIds.mockResolvedValue([br1, br2] as unknown as never);
+      borrows.listActiveByUser.mockResolvedValue({
+        borrowIds: ['br1', 'br2'],
+        total: 2,
+      });
+      borrows.findByIds.mockResolvedValue([br1, br2]);
 
-      const proj1 = { ...baseBook('b1'), likeCount: 0, commentCount: 0, avgRating: 0, ratingsCount: 0 } as BookProjection;
-      const proj2 = { ...baseBook('b2'), likeCount: 0, commentCount: 0, avgRating: 0, ratingsCount: 0 } as BookProjection;
+      const proj1 = {
+        ...baseBook('b1'),
+        likeCount: 0,
+        commentCount: 0,
+        avgRating: 0,
+        ratingsCount: 0,
+      };
+      const proj2 = {
+        ...baseBook('b2'),
+        likeCount: 0,
+        commentCount: 0,
+        avgRating: 0,
+        ratingsCount: 0,
+      };
       readModel.attachToBorrows.mockResolvedValue(
-        new Map([['b1', proj1], ['b2', proj2]]),
+        new Map([
+          ['b1', proj1],
+          ['b2', proj2],
+        ]),
       );
 
       const result = await svc.listForUser('u1', 1, 10);
@@ -210,7 +249,10 @@ describe('BorrowsService', () => {
     it('skips borrows whose book is missing from the read model', async () => {
       const br1 = baseBorrow('br1', 'b1', 'u1');
 
-      borrows.listActiveByUser.mockResolvedValue({ borrowIds: ['br1'], total: 1 });
+      borrows.listActiveByUser.mockResolvedValue({
+        borrowIds: ['br1'],
+        total: 1,
+      });
       borrows.findByIds.mockResolvedValue([br1]);
       readModel.attachToBorrows.mockResolvedValue(new Map());
 

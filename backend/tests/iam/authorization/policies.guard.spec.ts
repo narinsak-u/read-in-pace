@@ -63,11 +63,16 @@ describe('PoliciesGuard', () => {
 
   it('throws UnauthorizedException when no user is on the request', async () => {
     reflector.getAllAndOverride.mockReturnValue(['CAN_EDIT_BOOK']);
-    await expect(guard.canActivate(makeCtx({ user: undefined }))).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(
+      guard.canActivate(makeCtx({ user: undefined })),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
   it('resolves and runs each policy', async () => {
-    reflector.getAllAndOverride.mockReturnValue(['CAN_EDIT_BOOK', 'CAN_DELETE_BOOK']);
+    reflector.getAllAndOverride.mockReturnValue([
+      'CAN_EDIT_BOOK',
+      'CAN_DELETE_BOOK',
+    ]);
 
     const policy1: Policy = {
       action: 'edit',
@@ -89,8 +94,14 @@ describe('PoliciesGuard', () => {
 
     expect(result).toBe(true);
     expect(moduleRef.resolve).toHaveBeenCalledTimes(2);
-    expect(moduleRef.resolve).toHaveBeenCalledWith('CAN_EDIT_BOOK', undefined, { strict: false });
-    expect(moduleRef.resolve).toHaveBeenCalledWith('CAN_DELETE_BOOK', undefined, { strict: false });
+    expect(moduleRef.resolve).toHaveBeenCalledWith('CAN_EDIT_BOOK', undefined, {
+      strict: false,
+    });
+    expect(moduleRef.resolve).toHaveBeenCalledWith(
+      'CAN_DELETE_BOOK',
+      undefined,
+      { strict: false },
+    );
     expect(policy1.check).toHaveBeenCalledWith({
       user: alice,
       params: { id: 'b1' },
