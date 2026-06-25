@@ -88,7 +88,7 @@ export function useBorrows() {
     fetchBorrows(borrowsPage.value + 1, true, lastBorrowsLimit);
   }
 
-  onInvalidate('borrows', () => fetchBorrows(1));
+  onInvalidate('borrows', () => fetchBorrows(1, false, lastBorrowsLimit));
 
   return {
     borrows: readonly(borrows),

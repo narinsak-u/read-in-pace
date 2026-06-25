@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { CheckCircle, BookOpen } from "lucide-vue-next";
+import { BookOpen } from "lucide-vue-next";
 import { useAuthStore } from "~/stores/auth";
 import { useBookStatusStore } from "~/stores/bookStatus";
 import { usePurchases } from "~/composables/usePurchases";
 import { useBorrows } from "~/composables/useBorrows";
+import type { StockActions } from "~/utils/stock";
 import type { BorrowItem } from "~/composables/useBorrows";
 import type { Book } from "~/types/book";
+import { mapBookResponse } from "~/types/book";
 import BookCard from "~/components/book/BookCard.vue";
 import PaginationNav from "~/components/browse/PaginationNav.vue";
 
@@ -32,13 +34,8 @@ const {
   refresh: refreshPurchases,
 } = usePurchases();
 
-const {
-  borrows,
-  borrowsLoaded,
-  borrowsPage,
-  borrowsMeta,
-  fetchBorrows,
-} = useBorrows();
+const { borrows, borrowsLoaded, borrowsPage, borrowsMeta, fetchBorrows } =
+  useBorrows();
 const { returnBook } = useBookStatusStore();
 
 const pageNumbers = computed(() => {
@@ -82,12 +79,14 @@ function toBook(loan: BorrowItem): Book {
   };
 }
 
-function borrowActions(loan: BorrowItem) {
+function borrowActions(loan: BorrowItem): StockActions {
   return {
     isBorrowed: true,
     canBuy: loan.inStock > 1,
     canBorrow: false,
     unavailable: false,
+    isPurchased: false,
+    ownedCount: 0,
   };
 }
 
@@ -109,6 +108,7 @@ watch(
   (val) => {
     if (val) {
       fetchBorrows(borrowsPage.value, false, 12);
+      refreshPurchases();
     }
   },
   { immediate: true },
@@ -150,7 +150,7 @@ onMounted(async () => {
           Purchased
         </button>
         <button
-          class="border-b-2 px-4 py-2 font-serif text-sm transition-colors"
+          class="border-b-2 cursor-pointer px-4 py-2 font-serif text-sm transition-colors"
           :class="
             tab === 'borrowed'
               ? 'border-primary text-primary'
@@ -205,45 +205,25 @@ onMounted(async () => {
           </NuxtLink>
         </div>
 
-        <div v-else class="mt-8 divide-y divide-border">
-          <article
+        <div
+          v-else
+          class="mt-8 grid grid-cols-2 gap-x-5 gap-y-8 md:grid-cols-4"
+        >
+          <BookCard
             v-for="entry in purchases"
             :key="entry.purchase?.id ?? entry.book?.id"
-            class="flex gap-5 py-6"
-          >
-            <CoverImage
-              :crop="entry.book?.crop ?? null"
-              :src="entry.book?.cover ?? ''"
-              :alt="`${entry.book?.title ?? 'Book'} cover`"
-              class="h-28 w-20 shrink-0 shadow-md"
-            />
-            <div class="flex min-w-0 flex-1 flex-col justify-center">
-              <h2 class="font-serif text-lg font-bold">
-                <NuxtLink
-                  :to="`/book/${entry.book?.slug ?? entry.book?.id}`"
-                  class="hover:text-primary"
-                >
-                  {{ entry.book?.title ?? "Unknown Title" }}
-                </NuxtLink>
-              </h2>
-              <p class="mt-0.5 text-sm italic text-muted-foreground">
-                by {{ entry.book?.author ?? "Unknown" }}
-              </p>
-              <p class="mt-2 font-mono text-xs text-primary">
-                ${{ entry.book?.price ?? "0" }}
-              </p>
-              <p
-                v-if="entry.purchase?.purchasedAt"
-                class="mt-1 font-mono text-[10px] text-muted-foreground"
-              >
-                Purchased
-                {{ new Date(entry.purchase.purchasedAt).toLocaleDateString() }}
-              </p>
-            </div>
-            <div class="flex items-center">
-              <CheckCircle class="size-5 text-primary" />
-            </div>
-          </article>
+            :book="mapBookResponse(entry.book as Record<string, unknown>)"
+            :purchased-at="entry.purchase?.purchasedAt as string | undefined"
+            :actions="{
+              isBorrowed: false,
+              canBuy: (entry.book?.inStock ?? 0) > 1,
+              canBorrow: (entry.book?.inStock ?? 0) > 0,
+              unavailable: (entry.book?.inStock ?? 0) < 1,
+              isPurchased: true,
+              ownedCount: 1,
+            }"
+            :flash="flash"
+          />
         </div>
       </template>
 

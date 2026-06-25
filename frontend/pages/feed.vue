@@ -3,7 +3,7 @@ import { useAuthStore } from "~/stores/auth";
 import { Button } from "~/components/ui/button";
 
 definePageMeta({
-  title: "Ex Libris — Social Library",
+  title: "Feed — Read in Peace",
   description:
     "Borrow, return, buy, review, rate, and discuss books with fellow readers.",
   layout: "default",
@@ -11,6 +11,12 @@ definePageMeta({
 
 const query = shallowRef("");
 const reviewOpen = shallowRef(false);
+const reviewBook = shallowRef<{
+  id: string;
+  title: string;
+  cover: string;
+  crop: number | null;
+} | null>(null);
 const rating = shallowRef(0);
 const reviewText = shallowRef("");
 const { notice, flash } = useFlash();
@@ -28,7 +34,12 @@ const auth = useAuthStore();
         <ActiveLoans
           :mode="auth.signedIn ? 'loans' : 'trending'"
           :flash="flash"
-          @open-review="reviewOpen = true"
+          @open-review="
+            (book: { id: string; title: string; cover: string; crop: number | null }) => {
+              reviewBook = book;
+              reviewOpen = true;
+            }
+          "
         />
         <NewArrivals v-model:query="query" :flash="flash" />
       </div>
@@ -56,9 +67,11 @@ const auth = useAuthStore();
     </main>
 
     <ReviewModal
+      v-if="reviewBook"
       v-model:open="reviewOpen"
       v-model:rating="rating"
       v-model:reviewText="reviewText"
+      :book="reviewBook"
       :flash="flash"
     />
   </div>

@@ -75,6 +75,11 @@ export function useBookComments(bookId: string | Ref<string> | (() => string)) {
   const error = shallowRef<unknown>(null)
 
   async function fetchComments() {
+    if (!id.value) {
+      loading.value = false
+      reviews.value = []
+      return
+    }
     loading.value = true
     error.value = null
     try {

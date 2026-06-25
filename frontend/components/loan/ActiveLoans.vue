@@ -10,7 +10,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  "open-review": [];
+  "open-review": [book: { id: string; title: string; cover: string; crop: number | null }];
 }>();
 
 const auth = useAuthStore();
@@ -176,7 +176,7 @@ watch(
         :loans="borrows as any"
         :flash="flash"
         @return="(bookId, title) => onReturnBook(bookId, title)"
-        @open-review="emit('open-review')"
+        @open-review="(book: { id: string; title: string; cover: string; crop: number | null }) => emit('open-review', book)"
       />
     </template>
   </section>

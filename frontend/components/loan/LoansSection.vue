@@ -2,6 +2,7 @@
 import { ShoppingBag } from "lucide-vue-next";
 import { Button } from "~/components/ui/button";
 import { useCartStore } from "~/stores/cart";
+import { daysUntilDue, dueLabel, borrowProgress } from "~/utils/dueDate";
 
 interface LoanItem {
   borrowId: string;
@@ -27,31 +28,19 @@ const props = defineProps<{
   flash: (message: string) => void;
 }>();
 
+interface ReviewBook {
+  id: string;
+  title: string;
+  cover: string;
+  crop: number | null;
+}
+
 const emit = defineEmits<{
   return: [bookId: string, title: string];
-  "open-review": [];
+  "open-review": [book: ReviewBook];
 }>();
 
 const cart = useCartStore();
-
-function dueLabel(dueAt: string): { text: string; urgent: boolean } {
-  const due = new Date(dueAt);
-  const now = new Date();
-  const diffMs = due.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-  if (diffDays < 0)
-    return { text: `OVERDUE (${Math.abs(diffDays)}D)`, urgent: true };
-  if (diffDays === 0) return { text: "DUE TODAY", urgent: true };
-  if (diffDays <= 3) return { text: `DUE IN ${diffDays} DAYS`, urgent: true };
-  const month = due.toLocaleDateString("en-US", { month: "short" });
-  const day = due.getDate();
-  return { text: `DUE: ${month.toUpperCase()} ${day}`, urgent: false };
-}
-
-function readPercent(current: number, total: number): number {
-  if (total <= 0) return 0;
-  return Math.round((current / total) * 100);
-}
 
 function loanByBookId(bookId: string): LoanItem {
   return props.loans.find((l) => l.bookId === bookId)!;
@@ -114,23 +103,28 @@ function toBook(loan: LoanItem) {
           {{ loanByBookId(book.id).avgRating.toFixed(2) }} avg rating
         </span>
       </div>
+
+      <!-- Remaining days to return -->
       <div>
         <div class="h-1.5 w-full overflow-hidden rounded-full bg-foreground/5">
           <div
             class="h-full bg-primary transition-all"
             :style="{
-              width: `${readPercent(loanByBookId(book.id).currentPage, loanByBookId(book.id).totalPages)}%`,
+              width: `${borrowProgress(loanByBookId(book.id).dueAt)}%`,
             }"
           />
         </div>
         <p class="mt-2 font-mono text-[11px] text-muted-foreground">
-          PAGE {{ loanByBookId(book.id).currentPage }} OF
-          {{ loanByBookId(book.id).totalPages }} ({{
-            readPercent(
-              loanByBookId(book.id).currentPage,
-              loanByBookId(book.id).totalPages,
-            )
-          }}%)
+          <template v-if="daysUntilDue(loanByBookId(book.id).dueAt) < 0">
+            OVERDUE {{ Math.abs(daysUntilDue(loanByBookId(book.id).dueAt)) }}D
+          </template>
+          <template v-else>
+            {{ daysUntilDue(loanByBookId(book.id).dueAt) }}
+            {{
+              daysUntilDue(loanByBookId(book.id).dueAt) === 1 ? "day" : "days"
+            }}
+            remaining
+          </template>
         </p>
       </div>
     </template>
@@ -139,7 +133,17 @@ function toBook(loan: LoanItem) {
       <Button variant="archival" @click="emit('return', book.id, book.title)">
         Return Book
       </Button>
-      <Button variant="archivalOutline" @click="emit('open-review')">
+      <Button
+        variant="archivalOutline"
+        @click="
+          emit('open-review', {
+            id: book.id,
+            title: book.title,
+            cover: book.cover,
+            crop: book.crop,
+          })
+        "
+      >
         Write Review
       </Button>
       <Button
@@ -183,8 +187,9 @@ function toBook(loan: LoanItem) {
           size="sm"
           variant="archivalGhost"
           @click="emit('return', book.id, book.title)"
-          >Return</Button
         >
+          Return
+        </Button>
         <Button
           v-if="loanByBookId(book.id).inStock > 1"
           size="sm"
@@ -210,7 +215,11 @@ function toBook(loan: LoanItem) {
   </BookListSection>
 
   <div class="mt-8 text-center">
-    <Button size="sm" variant="archivalGhost" @click="navigateTo('/dashboard?tab=borrowed')">
+    <Button
+      size="sm"
+      variant="archivalGhost"
+      @click="navigateTo('/dashboard?tab=borrowed')"
+    >
       View all borrowed books
     </Button>
   </div>

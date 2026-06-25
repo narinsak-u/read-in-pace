@@ -36,14 +36,14 @@ const mergedReplies = computed<Reply[]>(() => [
 
 const visibleReplies = computed<Reply[]>(() => {
   const list = mergedReplies.value;
-  if (showAllReplies.value || list.length <= 2) return list;
-  return list.slice(0, 2);
+  if (showAllReplies.value || list.length <= 3) return list;
+  return list.slice(0, 3);
 });
 
 const hiddenReplyCount = computed<number>(() => {
   const list = mergedReplies.value;
-  if (showAllReplies.value || list.length <= 2) return 0;
-  return list.length - 2;
+  if (showAllReplies.value || list.length <= 3) return 0;
+  return list.length - 3;
 });
 
 watch(
@@ -72,11 +72,6 @@ async function toggleLike() {
 }
 
 function toggleReply() {
-  // if (!auth.signedIn) {
-  //   auth.openAuthModal();
-  //   return;
-  // }
-  //
   replyOpen.value = !replyOpen.value;
 }
 
@@ -92,6 +87,9 @@ async function postReply() {
 
   if (success) {
     replyOpen.value = false;
+    optimisticReplies.value = optimisticReplies.value.map((r) =>
+      r.pending ? { ...r, pending: false } : r,
+    );
   } else {
     optimisticReplies.value = optimisticReplies.value.filter(
       (r) => r !== optimistic,

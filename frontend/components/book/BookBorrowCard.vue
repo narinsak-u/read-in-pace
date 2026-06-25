@@ -5,6 +5,8 @@ import { storeToRefs } from "pinia";
 import { useCartStore } from "~/stores/cart";
 import { useAuthStore } from "~/stores/auth";
 import { useBookStatusStore } from "~/stores/bookStatus";
+import { useBorrows } from "~/composables/useBorrows";
+import { dueInText } from "~/utils/dueDate";
 import type { Book } from "~/types/book";
 
 const props = defineProps<{
@@ -22,6 +24,17 @@ const purchasing = shallowRef(false);
 
 const isBorrowed = computed(() => borrowedSlugs.value.has(props.book.slug));
 const ownedCount = computed(() => purchasedCounts.value.get(props.bookId) ?? 0);
+
+const borrowList = useBorrows();
+const activeLoan = computed(() =>
+  borrowList.borrows.value.find((l) => l.bookId === props.bookId),
+);
+
+onMounted(() => {
+  if (auth.signedIn) {
+    borrowList.fetchBorrows(1);
+  }
+});
 
 async function borrowBookAction() {
   if (!auth.signedIn) {
@@ -113,8 +126,8 @@ function addToCart() {
         </p>
         <p class="mt-1 text-xs leading-5 text-muted-foreground">
           {{
-            isBorrowed
-              ? "Due in 14 days"
+            isBorrowed && activeLoan
+              ? dueInText(activeLoan.dueAt)
               : book.inStock > 0
                 ? `${book.inStock} ${book.inStock === 1 ? "copy" : "copies"} ready to borrow`
                 : "Join the waitlist to be notified"

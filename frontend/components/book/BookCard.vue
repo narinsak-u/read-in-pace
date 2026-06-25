@@ -11,6 +11,7 @@ const props = defineProps<{
   book: Book;
   actions: StockActions;
   flash: (message: string) => void;
+  purchasedAt?: string;
 }>();
 
 const emit = defineEmits<{
@@ -68,7 +69,16 @@ function onBuy() {
     <p class="text-xs text-muted-foreground my-1">{{ book.author }}</p>
     <div class="mt-1 flex items-center gap-1 text-[10px] text-primary">
       <Star class="size-3 fill-current" /> {{ book.avgRating.toFixed(2) }}
-      <span v-if="book.inStock > 0" class="ml-auto text-muted-foreground">
+      <span
+        v-if="purchasedAt"
+        class="ml-auto font-mono text-muted-foreground"
+      >
+        Purchased {{ new Date(purchasedAt).toLocaleDateString() }}
+      </span>
+      <span
+        v-else-if="book.inStock > 0"
+        class="ml-auto text-muted-foreground"
+      >
         {{ book.inStock }} cop{{ book.inStock > 1 ? "ies" : "y" }} left
       </span>
     </div>
