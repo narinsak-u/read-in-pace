@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq, gt, or, sql } from 'drizzle-orm';
+import { and, eq, gt, inArray, or, sql } from 'drizzle-orm';
 import {
   DATABASE,
   type Database,
@@ -51,7 +51,7 @@ export class DrizzleBookRepository implements BookRepository {
         isAvailable: schema.books.isAvailable,
       })
       .from(schema.books)
-      .where(sql`${schema.books.id} = ANY(${bookIds})`);
+      .where(inArray(schema.books.id, bookIds));
   }
 
   async create(

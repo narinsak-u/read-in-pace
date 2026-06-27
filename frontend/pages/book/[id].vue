@@ -18,7 +18,7 @@ const book = computed<Book | null>(() => {
 });
 
 definePageMeta({
-  layout: 'default',
+  layout: "default",
 });
 
 useHead({
@@ -41,7 +41,12 @@ useHead({
     <div>
       <p class="font-mono text-xs uppercase text-primary">Catalog note 404</p>
       <h1 class="mt-2 font-serif text-4xl">This volume isn't on the shelf.</h1>
-      <NuxtLink to="/feed" :class="buttonVariants({ variant: 'archival', className: 'mt-6' })">Return to library</NuxtLink>
+      <NuxtLink
+        to="/feed"
+        :class="buttonVariants({ variant: 'archival', className: 'mt-6' })"
+      >
+        Return to library
+      </NuxtLink>
     </div>
   </div>
 
@@ -52,16 +57,16 @@ useHead({
       <section
         class="animate-enter grid gap-10 border-b border-border pb-14 lg:grid-cols-[300px_1fr_280px] lg:gap-14"
       >
-        <div class="mx-auto w-full max-w-[300px]">
+        <div class="mx-auto w-full max-w-75">
           <CoverImage
             :crop="book.crop"
             :src="book.cover"
             :alt="`${book.title} book cover`"
-            class="aspect-[2/3] w-full shadow-2xl"
+            class="aspect-2/3 w-full shadow-2xl"
           />
         </div>
 
-        <BookHero :book="book" :flash="flash" />
+        <BookHero :book="book" :book-id="book.id" :flash="flash" />
 
         <BookBorrowCard :book="book" :book-id="book.id" :flash="flash" />
       </section>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, shallowRef, watch } from "vue";
-import { mapBookResponse, type Book } from "~/types/book";
 import { stockActions } from "~/utils/stock";
 import { useAuthStore } from "~/stores/auth";
-import { useLibraryStore } from "~/stores/library";
+import { storeToRefs } from "pinia";
+import { useBookStatusStore } from "~/stores/bookStatus";
+import { useBooks } from "~/composables/useBooks";
 
 const query = defineModel<string>("query", { default: "" });
 
@@ -12,77 +12,38 @@ const props = defineProps<{
 }>();
 
 const auth = useAuthStore();
-const store = useLibraryStore();
+const store = useBookStatusStore();
+const { borrowedSlugs, purchasedCounts } = storeToRefs(store);
+const { borrow, returnBook } = store;
+
+const {
+  filtered,
+  meta,
+  page,
+  category,
+  pageNumbers,
+} = useBooks({ query });
+
 const categories = ["How-to", "Fiction", "Manga"] as const;
 const PAGE_SIZE = 8;
 
-const page = shallowRef(1);
-const category = shallowRef<string | undefined>(undefined);
-
-const { data: rawPage, refresh } = await useFetch<{
-  data: Record<string, unknown>[];
-  meta: { page: number; limit: number; total: number; totalPages: number };
-}>("/api/books", {
-  query: { page, limit: PAGE_SIZE, category },
-});
-
-watch(page, () => refresh());
-watch(category, () => {
-  page.value = 1;
-  refresh();
-});
-watch(query, () => {
-  page.value = 1;
-});
-
-const books = computed<Book[]>(() => {
-  if (!rawPage.value?.data) return [];
-  return rawPage.value.data.map(mapBookResponse);
-});
-
-const meta = computed(() => rawPage.value?.meta ?? null);
-
-const filtered = computed(() => {
-  const q = query.value.toLowerCase().trim();
-  if (!q) return books.value;
-  return books.value.filter((b) =>
-    `${b.title} ${b.author}`.toLowerCase().includes(q),
-  );
-});
-
-const pageNumbers = computed(() => {
-  const total = meta.value?.totalPages ?? 1;
-  const current = page.value;
-  const pages: number[] = [];
-  const start = Math.max(1, current - 2);
-  const end = Math.min(total, current + 2);
-  for (let i = start; i <= end; i++) pages.push(i);
-  return pages;
-});
-
-async function onBorrow(_slug: string, bookId: string) {
+async function onBorrow(slug: string, bookId: string) {
   if (!auth.signedIn) {
     auth.openAuthModal();
     return;
   }
   try {
-    await $fetch(`/api/books/${bookId}/borrow`, { method: "POST" });
-    store.addBorrowedSlug(_slug);
-    store.triggerBorrowRefresh();
+    await borrow(bookId, slug);
     props.flash("Book borrowed for 14 days.");
-    refresh();
   } catch (e: any) {
     props.flash(e?.data?.message || "Could not borrow the book.");
   }
 }
 
-async function onReturn(_slug: string, bookId: string) {
+async function onReturn(slug: string, bookId: string) {
   try {
-    await $fetch(`/api/books/${bookId}/return`, { method: "POST" });
-    store.removeBorrowedSlug(_slug);
-    store.triggerBorrowRefresh();
+    await returnBook(bookId, slug);
     props.flash("Book returned. Thank you!");
-    refresh();
   } catch (e: any) {
     props.flash(e?.data?.message || "Could not return the book.");
   }
@@ -127,7 +88,7 @@ function onPageGo(p: number) {
         v-for="book in filtered"
         :key="book.id"
         :book="book"
-        :actions="stockActions(book, store.borrowedSlugs)"
+        :actions="stockActions(book, borrowedSlugs, purchasedCounts)"
         :flash="flash"
         @borrow="onBorrow(book.slug, book.id)"
         @return="onReturn(book.slug, book.id)"

@@ -14,15 +14,17 @@ const props = defineProps<{
   name: string;
   time: string;
   likeCount: number;
+  liked?: boolean;
   submitting?: boolean;
-  replies?: Reply[];
+  replies?: readonly Reply[];
   submitReply: (text: string) => Promise<boolean>;
+  toggleLike: () => Promise<void>;
 }>();
 
 const auth = useAuthStore();
 const replyOpen = shallowRef(false);
 const replyText = shallowRef("");
-const liked = shallowRef(false);
+const liked = shallowRef(props.liked ?? false);
 const localLikeCount = shallowRef(props.likeCount);
 const showAllReplies = shallowRef(false);
 const optimisticReplies = ref<Reply[]>([]);
@@ -34,14 +36,14 @@ const mergedReplies = computed<Reply[]>(() => [
 
 const visibleReplies = computed<Reply[]>(() => {
   const list = mergedReplies.value;
-  if (showAllReplies.value || list.length <= 2) return list;
-  return list.slice(0, 2);
+  if (showAllReplies.value || list.length <= 3) return list;
+  return list.slice(0, 3);
 });
 
 const hiddenReplyCount = computed<number>(() => {
   const list = mergedReplies.value;
-  if (showAllReplies.value || list.length <= 2) return 0;
-  return list.length - 2;
+  if (showAllReplies.value || list.length <= 3) return 0;
+  return list.length - 3;
 });
 
 watch(
@@ -53,9 +55,24 @@ watch(
   },
 );
 
-function toggleLike() {
+async function toggleLike() {
+  if (!auth.signedIn) {
+    auth.openAuthModal();
+    return;
+  }
   liked.value = !liked.value;
   localLikeCount.value += liked.value ? 1 : -1;
+
+  try {
+    await props.toggleLike();
+  } catch {
+    liked.value = !liked.value;
+    localLikeCount.value += liked.value ? -1 : 1;
+  }
+}
+
+function toggleReply() {
+  replyOpen.value = !replyOpen.value;
 }
 
 async function postReply() {
@@ -70,6 +87,9 @@ async function postReply() {
 
   if (success) {
     replyOpen.value = false;
+    optimisticReplies.value = optimisticReplies.value.map((r) =>
+      r.pending ? { ...r, pending: false } : r,
+    );
   } else {
     optimisticReplies.value = optimisticReplies.value.filter(
       (r) => r !== optimistic,
@@ -98,16 +118,9 @@ async function postReply() {
     <div class="mt-2 flex items-center gap-3">
       <div class="w-full">
         <div class="flex">
-          <Button
-            variant="archivalGhost"
-            size="sm"
-            @click="replyOpen = !replyOpen"
-          >
+          <Button variant="archivalGhost" size="sm" @click="toggleReply">
             <MessageCircle />
-            Reply
-            <span v-if="mergedReplies.length > 0">
-              ({{ mergedReplies.length }})
-            </span>
+            Reply ({{ mergedReplies.length }})
           </Button>
           <Button
             variant="archivalGhost"
@@ -115,12 +128,10 @@ async function postReply() {
             @click="toggleLike"
             :class="liked ? 'text-primary' : ''"
           >
-            {{ liked ? "Liked" : "Like" }}
-            {{ localLikeCount > 0 ? `(${localLikeCount})` : "" }}
+            {{ liked ? "Liked" : "Like" }} ({{ localLikeCount }})
           </Button>
         </div>
 
-        <!-- Reply input -->
         <div v-if="replyOpen" class="mt-2">
           <!-- items -->
           <div
@@ -154,33 +165,35 @@ async function postReply() {
             </button>
           </div>
 
-          <!-- input -->
-          <textarea
-            v-model="replyText"
-            rows="2"
-            placeholder="Write your reply..."
-            class="w-full mt-2 resize-none rounded-sm border border-border bg-card p-2 text-xs focus:ring-1 focus:ring-ring"
-          />
-          <div class="mt-1 flex justify-end gap-1">
-            <Button
-              size="sm"
-              variant="archivalGhost"
-              @click="
-                replyOpen = false;
-                replyText = '';
-              "
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              variant="archival"
-              :disabled="!replyText.trim() || submitting"
-              @click="postReply"
-            >
-              Post
-            </Button>
-          </div>
+          <!-- input: hidden if user is not signed in -->
+          <template v-if="auth.signedIn">
+            <textarea
+              v-model="replyText"
+              rows="2"
+              placeholder="Write your reply..."
+              class="w-full mt-2 resize-none rounded-sm border border-border bg-card p-2 text-xs focus:ring-1 focus:ring-ring"
+            />
+            <div class="mt-1 flex justify-end gap-1">
+              <Button
+                size="sm"
+                variant="archivalGhost"
+                @click="
+                  replyOpen = false;
+                  replyText = '';
+                "
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                variant="archival"
+                :disabled="!replyText.trim() || submitting"
+                @click="postReply"
+              >
+                Post
+              </Button>
+            </div>
+          </template>
         </div>
       </div>
     </div>

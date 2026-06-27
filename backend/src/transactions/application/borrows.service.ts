@@ -87,11 +87,13 @@ export class BorrowsService {
     userId: string,
     page: number,
     limit: number,
+    sort?: string,
   ): Promise<Paginated<BorrowWithBook>> {
     const { borrowIds, total } = await this.borrows.listActiveByUser(
       userId,
       page,
       limit,
+      sort,
     );
 
     if (borrowIds.length === 0) {

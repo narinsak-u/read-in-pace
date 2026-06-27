@@ -21,8 +21,12 @@ type CommentRowFromSchema = typeof schema.comments.$inferSelect;
 export class DrizzleCommentRepository implements CommentRepository {
   constructor(@Inject(DATABASE) private readonly db: Database) {}
 
-  async findByBook(bookId: string): Promise<CommentWithUser[]> {
-    return this.db
+  async findByBook(
+    bookId: string,
+    tx?: DatabaseOrTransaction,
+  ): Promise<CommentWithUser[]> {
+    const db = tx ?? this.db;
+    return db
       .select({
         id: schema.comments.id,
         bookId: schema.comments.bookId,

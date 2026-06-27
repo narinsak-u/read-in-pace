@@ -1,62 +1,23 @@
 <script setup lang="ts">
 import { Button } from "~/components/ui/button";
 import { ArrowRight } from "lucide-vue-next";
-import { useLibraryStore } from "~/stores/library";
-import { useAuthStore } from "~/stores/auth";
+import { useFeed } from "~/composables/useFeed";
+import { useBookComments } from "~/composables/useBookComments";
 
-interface CommentUser {
-  id: string;
-  name: string;
-  image: string | null;
-}
-
-interface FeedReply {
-  id: string;
-  bookId: string;
-  userId: string;
-  parentId: string | null;
-  text: string;
-  createdAt: string;
-  updatedAt: string;
-  user: CommentUser;
-}
-
-interface FeedComment {
-  id: string;
-  bookId: string;
-  userId: string;
-  text: string;
-  createdAt: string;
-  updatedAt: string;
-  user: CommentUser;
-  replies?: FeedReply[];
-}
-
-const props = defineProps<{
+defineProps<{
   flash: (message: string) => void;
 }>();
 
-provide("flash", props.flash);
+const { posts, bookSlug, bookId, loading } = useFeed();
 
-const store = useLibraryStore();
-const auth = useAuthStore();
-const comments = ref<FeedComment[]>([]);
-const bookId = shallowRef("");
-const bookSlug = shallowRef("");
-const bookLikeCount = shallowRef(0);
-const loaded = shallowRef(false);
+const { toggleLike, addReply } = useBookComments(() => bookId.value);
 const replySubmittingId = shallowRef<string | null>(null);
 
-const FEED_COMMENT_LIMIT = 3;
-const visibleComments = computed<FeedComment[]>(() =>
-  comments.value.slice(0, FEED_COMMENT_LIMIT),
-);
+const FEED_POST_LIMIT = 3;
+const visiblePosts = computed(() => posts.value.slice(0, FEED_POST_LIMIT));
 
-function repliesFor(comment: FeedComment): { name: string; text: string }[] {
-  return (comment.replies ?? []).map((r) => ({
-    name: r.user.name,
-    text: r.text,
-  }));
+function getInitials(name: string): string {
+  return name.toUpperCase().slice(0, 2);
 }
 
 function timeAgo(dateStr: string): string {
@@ -71,69 +32,20 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`;
 }
 
-async function fetchFeed() {
+async function onReply(postId: string, text: string): Promise<boolean> {
+  replySubmittingId.value = postId;
   try {
-    await store.fetchTrending();
-    const trending = store.trendingBooks;
-    if (trending.length === 0) return;
-    const first = trending[0];
-    bookId.value = first.id;
-    bookSlug.value = first.slug;
-    bookLikeCount.value = first.likeCount;
-    await fetchComments();
-  } catch {
-    comments.value = [];
-  } finally {
-    loaded.value = true;
-  }
-}
-
-async function fetchComments() {
-  if (!bookId.value) return;
-  const data = await $fetch<FeedComment[]>(
-    `/api/books/${bookId.value}/comments`,
-  );
-  comments.value = data;
-}
-
-onMounted(fetchFeed);
-
-async function publishReply(
-  parentId: string,
-  text: string,
-): Promise<boolean> {
-  if (!text.trim() || !bookId.value) return false;
-
-  if (!auth.signedIn) {
-    auth.openAuthModal(() => {
-      void publishReply(parentId, text);
-    });
-    return false;
-  }
-
-  replySubmittingId.value = parentId;
-  try {
-    await $fetch(`/api/books/${bookId.value}/comments`, {
-      method: "POST",
-      body: { text: text.trim(), parentId },
-    });
-    await fetchComments();
-    props.flash("Reply posted.");
+    await addReply(postId, text);
     return true;
-  } catch (e: any) {
-    if (e?.status === 401) {
-      auth.openAuthModal(() => {
-        void publishReply(parentId, text);
-      });
-    } else if (e?.data?.message) {
-      props.flash(e.data.message);
-    } else {
-      props.flash("Could not post your reply. Please try again.");
-    }
+  } catch {
     return false;
   } finally {
     replySubmittingId.value = null;
   }
+}
+
+function onToggleLike(postId: string): () => Promise<void> {
+  return () => toggleLike(postId);
 }
 </script>
 
@@ -145,7 +57,7 @@ async function publishReply(
       <h2 class="font-serif text-xl">Reader Feed</h2>
       <span class="size-2 rounded-full bg-primary" />
     </div>
-    <div v-if="!loaded" class="space-y-6">
+    <div v-if="loading" class="space-y-6">
       <div class="border-l border-foreground/5 pl-4 animate-pulse">
         <div class="mb-1 flex items-center gap-2">
           <span class="size-6 rounded-full bg-muted" />
@@ -155,24 +67,29 @@ async function publishReply(
         <div class="h-3 w-full rounded bg-muted" />
       </div>
     </div>
-    <div v-else-if="comments.length === 0" class="space-y-6">
+    <div v-else-if="posts.length === 0" class="space-y-6">
       <p class="font-serif text-sm italic text-muted-foreground">
-        No comments on trending books yet.
+        No feed posts yet. Be the first to share what you're reading!
       </p>
     </div>
     <div v-else class="space-y-6">
       <FeedPost
-        v-for="comment in visibleComments"
-        :key="comment.id"
-        :initials="comment.user.name.toUpperCase().slice(0, 2)"
-        :name="comment.user.name"
-        :time="timeAgo(comment.createdAt)"
-        :like-count="bookLikeCount"
-        :replies="repliesFor(comment)"
-        :submitting="replySubmittingId === comment.id"
-        :submit-reply="(text: string) => publishReply(comment.id, text)"
+        v-for="post in visiblePosts"
+        :key="post.id"
+        :initials="getInitials(post.user.name)"
+        :name="post.user.name"
+        :time="timeAgo(post.createdAt)"
+        :like-count="post.likeCount"
+        :liked="post.liked"
+        :replies="post.replies"
+        :submitting="replySubmittingId === post.id"
+        :submit-reply="(text: string) => onReply(post.id, text)"
+        :toggle-like="onToggleLike(post.id)"
       >
-        {{ comment.text }}
+        <span v-if="post.rating" class="text-primary">
+          {{ "★".repeat(post.rating) }}
+        </span>
+        {{ post.text }}
       </FeedPost>
       <NuxtLink
         v-if="bookSlug"
@@ -180,7 +97,7 @@ async function publishReply(
         class="group inline-block"
       >
         <Button variant="archivalGhost" size="sm">
-          View discussion
+          View discussions
           <ArrowRight
             class="h-4 w-4 transition-transform group-hover:translate-x-1"
           />

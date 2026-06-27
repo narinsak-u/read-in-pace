@@ -51,6 +51,14 @@ function signOut() {
         {{ auth.user?.email }}
       </p>
       <hr class="border-border" />
+      <NuxtLink
+        to="/dashboard"
+        class="flex w-full items-center px-3 py-2 text-sm hover:bg-accent rounded-sm"
+        @click="show = false"
+      >
+        My Library
+      </NuxtLink>
+      <hr class="border-border" />
       <Button
         variant="archivalGhost"
         size="sm"

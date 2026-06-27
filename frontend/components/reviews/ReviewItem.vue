@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Button } from "~/components/ui/button";
+import { useAuthStore } from "~/stores/auth";
 
 interface Review {
   id: string;
@@ -9,7 +10,8 @@ interface Review {
   rating: number;
   text: string;
   likes: number;
-  replies: string[];
+  likedByUser: boolean;
+  readonly replies: readonly string[];
 }
 
 defineProps<{
@@ -25,6 +27,7 @@ const emit = defineEmits<{
   "cancel-reply": [];
 }>();
 
+const auth = useAuthStore();
 const replyText = shallowRef("");
 </script>
 
@@ -57,8 +60,8 @@ const replyText = shallowRef("");
           {{ review.text }}
         </p>
         <div class="mt-3 flex gap-2">
-          <Button size="sm" variant="archivalGhost" @click="emit('like')">
-            Like ({{ review.likes }})
+          <Button size="sm" variant="archivalGhost" @click="emit('like')" :class="review.likedByUser ? 'text-primary' : ''">
+            {{ review.likedByUser ? 'Liked' : 'Like' }} ({{ review.likes }})
           </Button>
           <Button size="sm" variant="archivalGhost" @click="emit('reply')">
             Reply ({{ review.replies.length }})
@@ -77,6 +80,7 @@ const replyText = shallowRef("");
           </p>
         </div>
         <div v-if="isReplying" class="mt-4">
+          <template v-if="auth.signedIn">
           <textarea
             v-model="replyText"
             rows="2"
@@ -102,6 +106,7 @@ const replyText = shallowRef("");
               Post Reply
             </Button>
           </div>
+          </template>
         </div>
       </div>
     </div>

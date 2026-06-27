@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ShoppingBag, Star } from "lucide-vue-next";
 import { Button } from "~/components/ui/button";
+import { storeToRefs } from "pinia";
 import { useCartStore } from "~/stores/cart";
+import { useBookStatusStore } from "~/stores/bookStatus";
 import { stockActions, type StockActions } from "~/utils/stock";
 import type { Book } from "~/types/book";
 
@@ -9,6 +11,7 @@ const props = defineProps<{
   book: Book;
   actions: StockActions;
   flash: (message: string) => void;
+  purchasedAt?: string;
 }>();
 
 const emit = defineEmits<{
@@ -17,6 +20,10 @@ const emit = defineEmits<{
 }>();
 
 const cart = useCartStore();
+const { purchasedCounts } = storeToRefs(useBookStatusStore());
+const ownedCount = computed(
+  () => purchasedCounts.value.get(props.book.id) ?? 0,
+);
 
 function onBorrow() {
   emit("borrow");
@@ -27,6 +34,12 @@ function onReturn() {
 }
 
 function onBuy() {
+  if (ownedCount.value > 0) {
+    const ok = window.confirm(
+      `You already own ${ownedCount.value} cop${ownedCount.value > 1 ? "ies" : "y"}. Are you sure you want to buy more?`,
+    );
+    if (!ok) return;
+  }
   cart.addItem({
     id: props.book.id,
     title: props.book.title,
@@ -53,9 +66,21 @@ function onBuy() {
     >
       <NuxtLink :to="`/book/${book.slug}`">{{ book.title }}</NuxtLink>
     </h3>
-    <p class="text-xs text-muted-foreground">{{ book.author }}</p>
+    <p class="text-xs text-muted-foreground my-1">{{ book.author }}</p>
     <div class="mt-1 flex items-center gap-1 text-[10px] text-primary">
       <Star class="size-3 fill-current" /> {{ book.avgRating.toFixed(2) }}
+      <span
+        v-if="purchasedAt"
+        class="ml-auto font-mono text-muted-foreground"
+      >
+        Purchased {{ new Date(purchasedAt).toLocaleDateString() }}
+      </span>
+      <span
+        v-else-if="book.inStock > 0"
+        class="ml-auto text-muted-foreground"
+      >
+        {{ book.inStock }} cop{{ book.inStock > 1 ? "ies" : "y" }} left
+      </span>
     </div>
     <div class="mt-3 flex gap-1">
       <template v-if="actions.isBorrowed">

@@ -27,7 +27,7 @@ defineSlots<{
           :crop="books[0].crop"
           :src="books[0].cover"
           :alt="`${books[0].title} book cover`"
-          class="h-[270px] w-[180px]"
+          class="h-67.5 w-45"
         />
       </div>
       <div class="flex flex-1 flex-col justify-between py-2">
@@ -42,8 +42,9 @@ defineSlots<{
             <NuxtLink
               :to="`/book/${books[0].slug}`"
               class="transition-colors hover:text-primary"
-              >{{ books[0].title }}</NuxtLink
             >
+              {{ books[0].title }}
+            </NuxtLink>
           </h2>
           <p class="mb-4 italic text-muted-foreground">
             by {{ books[0].author }}
@@ -71,9 +72,13 @@ defineSlots<{
           />
           <div class="flex min-w-0 flex-1 flex-col justify-between">
             <div>
-              <h3 class="font-serif text-sm font-bold leading-tight">
-                {{ book.title }}
-              </h3>
+              <NuxtLink :to="`/book/${books[0].slug}`">
+                <h3
+                  class="font-serif text-sm font-bold leading-tight transition-colors hover:text-primary"
+                >
+                  {{ book.title }}
+                </h3>
+              </NuxtLink>
               <p class="text-xs italic mt-1 text-muted-foreground">
                 {{ book.author }}
               </p>

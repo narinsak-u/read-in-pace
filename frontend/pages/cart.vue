@@ -2,7 +2,9 @@
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
 import { buttonVariants } from '~/components/ui/button/variants';
+import { storeToRefs } from 'pinia';
 import { useCartStore } from '~/stores/cart';
+import { useBookStatusStore } from '~/stores/bookStatus';
 
 definePageMeta({
   title: 'Your Cart — Read in Peace',
@@ -10,6 +12,7 @@ definePageMeta({
 });
 
 const cart = useCartStore();
+const { purchasedCounts } = storeToRefs(useBookStatusStore());
 </script>
 
 <template>
@@ -39,6 +42,12 @@ const cart = useCartStore();
                 <h2 class="font-serif text-xl font-bold">{{ item.title }}</h2>
                 <p class="mt-1 text-sm italic text-muted-foreground">by {{ item.author }}</p>
                 <p class="mt-3 font-mono text-xs text-primary">${{ item.price.toFixed(2) }}</p>
+                <p
+                  v-if="(purchasedCounts.get(item.id) ?? 0) > 0"
+                  class="mt-1 text-[10px] text-muted-foreground"
+                >
+                  You own {{ purchasedCounts.get(item.id) ?? 0 }} cop{{ (purchasedCounts.get(item.id) ?? 0) > 1 ? 'ies' : 'y' }}
+                </p>
               </div>
               <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center border border-border">
