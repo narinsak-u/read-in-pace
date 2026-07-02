@@ -144,7 +144,7 @@ export const useCartStore = defineStore('cart', () => {
   watch(
     () => auth.signedIn,
     (now, prev) => {
-      if (now && !prev) {
+      if (now && prev === false) {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
           try {
@@ -153,7 +153,7 @@ export const useCartStore = defineStore('cart', () => {
           } catch {
             // malformed localStorage — ignore
           }
-          localStorage.removeItem(STORAGE_KEY);
+          // Persist watcher handles writing; no need to delete the shared key.
         }
       }
     },
