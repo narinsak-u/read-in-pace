@@ -25,18 +25,13 @@ export class DrizzleMembershipRepository implements MembershipRepository {
     userId: string,
     data: Partial<Omit<MembershipRow, 'id' | 'userId' | 'createdAt'>>,
   ): Promise<MembershipRow> {
-    const existing = await this.findByUserId(userId);
-    if (existing) {
-      const [row] = await this.db
-        .update(schema.memberships)
-        .set({ ...data, updatedAt: new Date() })
-        .where(eq(schema.memberships.id, existing.id))
-        .returning();
-      return row as MembershipRow;
-    }
     const [row] = await this.db
       .insert(schema.memberships)
       .values({ userId, ...data } as any)
+      .onConflictDoUpdate({
+        target: schema.memberships.userId,
+        set: data,
+      })
       .returning();
     return row as MembershipRow;
   }
