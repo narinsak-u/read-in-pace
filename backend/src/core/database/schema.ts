@@ -218,6 +218,7 @@ export const memberships = pgTable('memberships', {
   id: text('id').primaryKey().default(sql`gen_random_uuid()`),
   userId: text('user_id')
     .notNull()
+    .unique()
     .references(() => user.id, { onDelete: 'cascade' }),
   plan: varchar('plan', { length: 20 }).notNull().default('free'),
   status: varchar('status', { length: 20 }).notNull().default('active'),
